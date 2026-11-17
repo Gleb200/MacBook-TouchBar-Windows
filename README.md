@@ -23,7 +23,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (виджеты, адаптивный док приложений, питомец, кнопки)          -->
 <!-- ============================================================== -->
 ### 1. Overall Touch Bar View
-![Touch Bar Overview](<https://github.com/user-attachments/assets/0efa5b2b-2d07-4e09-91bd-c5a8a8b97fa9)
+![Touch Bar Overview](https://github.com/user-attachments/assets/0efa5b2b-2d07-4e09-91bd-c5a8a8b97fa9)
 *General view of the Touch Bar in action: ESC button, adaptive dock, volume/brightness controls, and companion pet.*
 
 <!-- ============================================================== -->
@@ -32,7 +32,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (капсульный слайдер и кнопка авто-яркости на тачбаре)          -->
 <!-- ============================================================== -->
 ### 2. Brightness Slider
-![Brightness Slider](screenshots/brightness_slider.png)
+![Brightness Slider](https://github.com/user-attachments/assets/f0aff591-0a11-4999-b7d6-9ccc245dfabd)
 *Touch Bar brightness slider drawer with real-time level adjustment and auto-brightness toggle.*
 
 <!-- ============================================================== -->
@@ -41,7 +41,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (оверлей Touch ID / Windows Hello в стиле macOS на тачбаре)    -->
 <!-- ============================================================== -->
 ### 3. Touch ID & Windows Hello Prompt
-![Touch ID Prompt](screenshots/touch_id_prompt.png)
+![Touch ID Prompt](https://github.com/user-attachments/assets/39a4bf55-028d-4758-9390-70e75ee13161)
 *macOS-style Touch ID / Windows Hello biometric verification prompt on the Touch Bar.*
 
 > [!IMPORTANT]
@@ -53,7 +53,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (название трека, автор, кнопки воспроизведения, танцы питомца) -->
 <!-- ============================================================== -->
 ### 4. Media Playback (Now Playing)
-![Media Playback Strip](screenshots/media_player.png)
+![Media Playback Strip](https://github.com/user-attachments/assets/5b9bbb5e-1bb8-4d51-a767-75ca384a60ac)
 *Live SMTC media strip displaying current track name, artist, and playback controls with companion pet dancing to music.*
 
 <!-- ============================================================== -->
@@ -62,7 +62,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (WPF Control Center в темной теме Windows 11)                  -->
 <!-- ============================================================== -->
 ### 5. Control Center & Settings Application
-![TouchBar Settings](screenshots/settings_overview.png)
+![TouchBar Settings](https://github.com/user-attachments/assets/62e02bac-4903-44ab-bd7b-dca24ab40fbf)
 *TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.*
 
 ---
