@@ -17,56 +17,38 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 
 ## Screenshots
 
-<!-- ============================================================== -->
-<!-- PHOTO 1: Overall Photo of Touch Bar in Action                  -->
-<!-- ВСТАВИТЬ СЮДА: Общее фото физического тачбара в работе         -->
-<!-- (виджеты, адаптивный док приложений, питомец, кнопки)          -->
-<!-- ============================================================== -->
 ### 1. Overall Touch Bar View
-![Touch Bar Overview](https://github.com/user-attachments/assets/0efa5b2b-2d07-4e09-91bd-c5a8a8b97fa9)
-*General view of the Touch Bar in action: ESC button, adaptive dock, volume/brightness controls, and companion pet.*
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0efa5b2b-2d07-4e09-91bd-c5a8a8b97fa9" width="600" alt="Touch Bar Overview" /><br>
+  <em>General view of the Touch Bar in action: ESC button, adaptive dock, volume/brightness controls, and companion pet.</em>
+</p>
 
-<!-- ============================================================== -->
-<!-- PHOTO 2: Brightness Slider Drawer                              -->
-<!-- ВСТАВИТЬ СЮДА: Фото/скриншот выдвинутого слайдера яркости       -->
-<!-- (капсульный слайдер и кнопка авто-яркости на тачбаре)          -->
-<!-- ============================================================== -->
 ### 2. Brightness Slider
-![Brightness Slider](https://github.com/user-attachments/assets/f0aff591-0a11-4999-b7d6-9ccc245dfabd)
-*Touch Bar brightness slider drawer with real-time level adjustment and auto-brightness toggle.*
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f0aff591-0a11-4999-b7d6-9ccc245dfabd" width="600" alt="Brightness Slider" /><br>
+  <em>Touch Bar brightness slider drawer with real-time level adjustment and auto-brightness toggle.</em>
+</p>
 
-<!-- ============================================================== -->
-<!-- PHOTO 3: Touch ID / Windows Hello Fingerprint Prompt           -->
-<!-- ВСТАВИТЬ СЮДА: Фото/скриншот баннера-просьбы приложить палец   -->
-<!-- (оверлей Touch ID / Windows Hello в стиле macOS на тачбаре)    -->
-<!-- ============================================================== -->
 ### 3. Touch ID & Windows Hello Prompt
-![Touch ID Prompt](https://github.com/user-attachments/assets/39a4bf55-028d-4758-9390-70e75ee13161)
-*macOS-style Touch ID / Windows Hello biometric verification prompt on the Touch Bar.*
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/39a4bf55-028d-4758-9390-70e75ee13161" width="600" alt="Touch ID Prompt" /><br>
+  <em>macOS-style Touch ID / Windows Hello biometric verification prompt on the Touch Bar.</em>
+</p>
 
 > [!IMPORTANT]
 > **Touch ID Sensor in Windows:** To enable the physical Touch ID fingerprint sensor on Apple T2 MacBook Pro under Windows, install the open-source driver from **[Osaul4ik/apple-t2-touchid-windows](https://github.com/Osaul4ik/apple-t2-touchid-windows)**.
 
-<!-- ============================================================== -->
-<!-- PHOTO 4: Media Control Strip / Now Playing Music Display       -->
-<!-- ВСТАВИТЬ СЮДА: Фото/скриншот отображения музыки (SMTC)         -->
-<!-- (название трека, автор, кнопки воспроизведения, танцы питомца) -->
-<!-- ============================================================== -->
 ### 4. Media Playback (Now Playing)
-![Media Playback Strip](https://github.com/user-attachments/assets/5b9bbb5e-1bb8-4d51-a767-75ca384a60ac)
-*Live SMTC media strip displaying current track name, artist, and playback controls with companion pet dancing to music.*
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/5b9bbb5e-1bb8-4d51-a767-75ca384a60ac" width="600" alt="Media Playback Strip" /><br>
+  <em>Live SMTC media strip displaying current track name, artist, and playback controls with companion pet dancing to music.</em>
+</p>
 
-<!-- ============================================================== -->
-<!-- PHOTO 5: Settings Application (TouchBarSettings.exe)           -->
-<!-- ВСТАВИТЬ СЮДА: Общий скриншот окна программы TouchBarSettings  -->
-<!-- (WPF Control Center в темной теме Windows 11)                  -->
-<!-- ============================================================== -->
 ### 5. Control Center & Settings Application
-![TouchBar Settings](https://github.com/user-attachments/assets/62e02bac-4903-44ab-bd7b-dca24ab40fbf)
-*TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.*
-
----
-
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/62e02bac-4903-44ab-bd7b-dca24ab40fbf" width="520" alt="TouchBar Settings" /><br>
+  <em>TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.</em>
+</p>
 ## Key Features
 
 ### 1. Direct 60 FPS Hardware Framebuffer Rendering
