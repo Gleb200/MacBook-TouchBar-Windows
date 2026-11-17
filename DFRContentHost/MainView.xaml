@@ -1,0 +1,647 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1004" d:DesignHeight="30" Background="#000000"
+             xmlns:models="clr-namespace:DFRContentHost.Models"
+             xmlns:interop="clr-namespace:DFRContentHost.Interop"
+             x:Class="DFRContentHost.MainView">
+  <UserControl.Styles>
+    <!-- Fluid macOS/iOS tactile button feedback with scale depression effect -->
+    <Style Selector="Button">
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Setter Property="RenderTransform">
+        <ScaleTransform ScaleX="1.0" ScaleY="1.0" />
+      </Setter>
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.06" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <!-- Eliminate sharp gray focus/press square from Avalonia default template & unify corner radius -->
+    <Style Selector="Button /template/ ContentPresenter">
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#3A3A3E" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Tactile push-down / depress effect on press (Scale 0.96) -->
+    <Style Selector="Button:pressed">
+      <Setter Property="RenderTransform">
+        <ScaleTransform ScaleX="0.96" ScaleY="0.96" />
+      </Setter>
+      <Setter Property="Opacity" Value="0.90" />
+    </Style>
+
+    <!-- Smooth dock pill transition -->
+    <Style Selector="Border.dockPill">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <!-- Smooth active dot transition -->
+    <Style Selector="Border.activeDot">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+        </Transitions>
+      </Setter>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#000000">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- Esc Button (Only shown on older Touch Bar models without a physical Esc key) -->
+    <Border Grid.Column="0" Margin="4,2" Width="56" Height="26" Background="#262629" CornerRadius="8"
+            IsVisible="{Binding ShowVirtualEsc}">
+      <Button Width="56" Height="26" Click="OnEscClicked"
+              FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+              FontWeight="SemiBold" FontSize="12" BorderThickness="0"
+              Background="Transparent" Foreground="#F2F2F7" Content="esc"
+              HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+    </Border>
+
+    <!-- Dynamic Main Area -->
+    <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+
+      <!-- MODE 1: FN Keys Overlay (F1-F12) -->
+      <ItemsControl Items="{Binding FnKeyViewModel.FnKeys}" IsVisible="{Binding FnKeyViewModel.FnVisible}"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Margin="0" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="models:FunctionRowButtonModel">
+            <Border Margin="3,2" Width="68" Height="26" Background="#262629" CornerRadius="8">
+              <Button Width="68" Height="26" FontWeight="SemiBold" FontSize="12"
+                      BorderThickness="0" Background="Transparent"
+                      Foreground="#F2F2F7" Content="{Binding Content}" Command="{Binding KeyCommand}"
+                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- NORMAL MODE: Media / Dock on Left + Control Strip & Telemetry on Right -->
+      <Grid IsVisible="{Binding IsNormalModeVisible}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT / CENTER AREA: Media or Running Apps Dock -->
+        <Grid Grid.Column="0" Name="DockLeftAreaGrid" VerticalAlignment="Center" HorizontalAlignment="Stretch" ClipToBounds="True">
+
+          <!-- 4A. macOS Media Strip with Interactive Scrubber (When Media is Active) -->
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left"
+                      Opacity="{Binding MediaStripOpacity}" IsVisible="{Binding IsMediaStripVisible}">
+            <StackPanel.RenderTransform>
+              <TranslateTransform X="{Binding MediaStripTranslateX}" />
+            </StackPanel.RenderTransform>
+
+            <!-- 1. macOS Animated Audio Equalizer -->
+            <Border Margin="4,2,2,2" Height="26" Width="26" Background="#262629" CornerRadius="8" VerticalAlignment="Center">
+              <Button Width="26" Height="26" Click="OnPlayPauseClicked"
+                      BorderThickness="0" Background="Transparent" Padding="0"
+                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar1Height}" Background="#FA243C" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar2Height}" Background="#FF375F" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar3Height}" Background="#FA243C" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar4Height}" Background="#FF453A" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </Border>
+
+            <!-- 2. Album Art Thumbnail -->
+            <Border Margin="2,2,3,2" Width="26" Height="26" Background="#262629" CornerRadius="6"
+                    IsVisible="{Binding SmtcViewModel.ThumbnailAvailable}" Opacity="{Binding SmtcViewModel.TrackOpacity}" ClipToBounds="True">
+              <Image Source="{Binding SmtcViewModel.MediaThumbnail}" Width="26" Height="26" />
+            </Border>
+
+            <!-- Media Title & Artist (Smooth Track Change Crossfade & Continuous Seamless Marquee) -->
+            <Border Width="105" Height="26" VerticalAlignment="Center" Margin="2,0,2,0" ClipToBounds="True"
+                    Opacity="{Binding SmtcViewModel.TrackOpacity}">
+              <Canvas Width="105" Height="26" ClipToBounds="True">
+                <!-- StackPanel 1: Main Stream -->
+                <StackPanel Canvas.Left="{Binding SmtcViewModel.TitleScrollOffsetCombined}" Canvas.Top="0"
+                            Orientation="Vertical" VerticalAlignment="Center">
+                  <TextBlock Foreground="#F2F2F7" FontSize="11" FontWeight="SemiBold"
+                             FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                             Text="{Binding SmtcViewModel.MediaTitle}"
+                             TextWrapping="NoWrap" />
+                  <TextBlock Foreground="#8E8E93" FontSize="9"
+                             FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                             Text="{Binding SmtcViewModel.MediaArtist}"
+                             TextWrapping="NoWrap" />
+                </StackPanel>
+
+                <!-- StackPanel 2: Follower for Infinite Continuous Seamless Scrolling -->
+                <StackPanel Canvas.Left="{Binding SmtcViewModel.TitleSecondScrollOffsetCombined}" Canvas.Top="0"
+                            Orientation="Vertical" VerticalAlignment="Center"
+                            IsVisible="{Binding SmtcViewModel.IsMarqueeActive}">
+                  <TextBlock Foreground="#F2F2F7" FontSize="11" FontWeight="SemiBold"
+                             FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                             Text="{Binding SmtcViewModel.MediaTitle}"
+                             TextWrapping="NoWrap" />
+                  <TextBlock Foreground="#8E8E93" FontSize="9"
+                             FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                             Text="{Binding SmtcViewModel.MediaArtist}"
+                             TextWrapping="NoWrap" />
+                </StackPanel>
+              </Canvas>
+            </Border>
+
+            <!-- Interactive Scrubber & Timeline -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="1,0">
+              <!-- Current Time -->
+              <TextBlock Foreground="#AEAEB2" FontSize="10" FontWeight="Medium" VerticalAlignment="Center"
+                         FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                         Width="30" TextAlignment="Right" Text="{Binding SmtcViewModel.PositionText}" />
+
+              <!-- Full-height touch target with centered slim capsule track -->
+              <Border Name="ScrubberTrackBorder" Width="120" Height="26" Background="Transparent" Margin="3,0"
+                      PointerPressed="OnScrubberTrackPointer" PointerMoved="OnScrubberTrackPointer">
+                <Canvas Width="120" Height="14" VerticalAlignment="Center" ClipToBounds="True">
+                  <!-- Background Track -->
+                  <Border Canvas.Top="3" Width="120" Height="8" CornerRadius="4" Background="#262629" />
+                  <!-- Progress Fill -->
+                  <Border Canvas.Top="3" Width="{Binding SmtcViewModel.ScrubberFillWidth}" Height="8" CornerRadius="4" Background="#FFFFFF" />
+                  <!-- Playhead Knob -->
+                  <Border Canvas.Left="{Binding SmtcViewModel.ScrubberKnobX}" Canvas.Top="1" Width="12" Height="12"
+                          CornerRadius="6" Background="#FFFFFF" BorderBrush="#3A3A3E" BorderThickness="1.5" />
+                </Canvas>
+              </Border>
+
+              <!-- Total Duration -->
+              <TextBlock Foreground="#8E8E93" FontSize="10" FontWeight="Medium" VerticalAlignment="Center"
+                         FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                         Width="30" TextAlignment="Left" Text="{Binding SmtcViewModel.DurationText}" />
+            </StackPanel>
+
+            <!-- Playback Controls -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0">
+              <!-- Previous Track -->
+              <Border Margin="2" Width="30" Height="26" Background="#262629" CornerRadius="8">
+                <Button Width="30" Height="26" Click="OnPrevClicked"
+                        BorderThickness="0" Background="Transparent" Foreground="#F2F2F7"
+                        FontFamily="Segoe MDL2 Assets" FontSize="11" Content="&#xE100;"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                </Button>
+              </Border>
+
+              <!-- Play / Pause -->
+              <Border Margin="2" Width="34" Height="26" Background="#262629" CornerRadius="8">
+                <Button Width="34" Height="26" Click="OnPlayPauseClicked"
+                        BorderThickness="0" Background="Transparent" Foreground="#FFFFFF"
+                        FontFamily="Segoe MDL2 Assets" FontSize="12" Content="{Binding SmtcViewModel.PlayPauseGlyph}"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+              </Border>
+
+              <!-- Next Track -->
+              <Border Margin="2" Width="30" Height="26" Background="#262629" CornerRadius="8">
+                <Button Width="30" Height="26" Click="OnNextClicked"
+                        BorderThickness="0" Background="Transparent" Foreground="#F2F2F7"
+                        FontFamily="Segoe MDL2 Assets" FontSize="11" Content="&#xE101;"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+              </Border>
+
+              <!-- Collapse / Minimize Media Strip to Left and Open Normal Tabs -->
+              <Border Margin="2" Width="26" Height="26" Background="#262629" CornerRadius="8">
+                <Button Width="26" Height="26" Click="OnCollapseMediaClicked"
+                        BorderThickness="0" Background="Transparent" Padding="0"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                  <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#8E8E93"
+                             Text="&#xE76B;" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+              </Border>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- 4B. macOS Dock / Task Switcher (Adaptive Shrinking & Horizontal Touch Scroll with Left/Right Edge Fades) -->
+          <Grid VerticalAlignment="Center" HorizontalAlignment="Left"
+                Opacity="{Binding DockOpacity}" IsVisible="{Binding IsDockVisible}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Mini Audio Equalizer in Dock when background audio is heard (Click expands media back) -->
+            <Border Grid.Column="0" Margin="2,2,4,2" Height="26" Width="26" Background="#262629" CornerRadius="8" VerticalAlignment="Center"
+                    IsVisible="{Binding SmtcViewModel.IsAudioActive}">
+              <Button Width="26" Height="26" Click="OnExpandMediaClicked"
+                      BorderThickness="0" Background="Transparent" Padding="0"
+                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar1Height}" Background="#FA243C" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar2Height}" Background="#FF375F" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar3Height}" Background="#FA243C" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                  <Border Width="2.5" Height="{Binding SmtcViewModel.Bar4Height}" Background="#FF453A" CornerRadius="1.25" Margin="1,0" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </Border>
+
+            <!-- Scrollable Viewport & Fade Masks Container -->
+            <Grid Grid.Column="1" Width="{Binding AvailableDockWidth}" VerticalAlignment="Center" HorizontalAlignment="Left">
+
+              <!-- Clipped Scroll Viewport with Horizontal Touch Panning -->
+              <Grid Name="DockScrollViewport" Width="{Binding AvailableDockWidth}" Background="Transparent" ClipToBounds="True" VerticalAlignment="Center" HorizontalAlignment="Left">
+
+                <!-- Running App Pills Strip translated by DockTranslateX -->
+                <ItemsControl Items="{Binding RunningApps}" Width="{Binding TotalDockWidth}" VerticalAlignment="Center" HorizontalAlignment="Left">
+                  <ItemsControl.RenderTransform>
+                    <TranslateTransform X="{Binding DockTranslateX}" />
+                  </ItemsControl.RenderTransform>
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="interop:AppWindowInfo">
+                      <Border Classes="dockPill" Margin="2,2" Height="26" Width="{Binding TabWidth}" Background="{Binding PillBackground}" CornerRadius="8"
+                              BorderBrush="{Binding PillBorderBrush}" BorderThickness="{Binding BorderThicknessVal}" ClipToBounds="True">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+
+                          <!-- Main Window Switch / Focus Button -->
+                          <Button Grid.Column="0" Height="26" Command="{Binding SwitchCommand}"
+                                  BorderThickness="0" Background="Transparent" Foreground="{Binding TitleForeground}"
+                                  Padding="6,0,2,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left" VerticalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsHitTestVisible="False">
+                              <!-- Real Application Icon -->
+                              <Image Source="{Binding AppIcon}" Width="15" Height="15" Margin="0,0,4,0"
+                                     VerticalAlignment="Center" IsVisible="{Binding HasAppIcon}" />
+                              <!-- Fallback Glyph -->
+                              <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#0A84FF"
+                                         Text="{Binding IconGlyph}" IsVisible="{Binding HasIconGlyph}"
+                                         VerticalAlignment="Center" Margin="0,0,4,0" />
+                              <!-- Clean Program Name with Ellipsis Trimming -->
+                              <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="Medium" Foreground="{Binding TitleForeground}"
+                                         Text="{Binding DisplayTitle}" VerticalAlignment="Center"
+                                         TextWrapping="NoWrap"
+                                         MaxWidth="{Binding TextMaxWidth}" />
+                            </StackPanel>
+                          </Button>
+
+                          <!-- Close Tab 'X' Button -->
+                          <Button Grid.Column="1" Width="18" Height="26" Command="{Binding CloseCommand}"
+                                  BorderThickness="0" Background="Transparent" Padding="0,0,5,0"
+                                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                  IsVisible="{Binding ShowCloseButton}">
+                            <Border Width="13" Height="13" CornerRadius="6.5" Background="#3A3A3E" IsHitTestVisible="False">
+                              <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="7"
+                                         Foreground="#8E8E93" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            </Border>
+                          </Button>
+
+                          <!-- Active App Dot Indicator (macOS Dock style) -->
+                          <Border Grid.ColumnSpan="2" Classes="activeDot" Width="3" Height="3" Background="#007AFF" CornerRadius="1.5"
+                                  HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1"
+                                  Opacity="{Binding ActiveDotOpacity}" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+
+              <!-- Left Edge Fade Mask (Visual cue that more tabs exist to the left) -->
+              <Border Width="20" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                      IsHitTestVisible="False" IsVisible="{Binding IsScrollModeActive}"
+                      Opacity="{Binding LeftFadeOpacity}">
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Color="#E6000000" Offset="0.0" />
+                    <GradientStop Color="#00000000" Offset="1.0" />
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+
+              <!-- Right Edge Fade Mask (Visual cue that more tabs exist to the right) -->
+              <Border Width="20" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                      IsHitTestVisible="False" IsVisible="{Binding IsScrollModeActive}"
+                      Opacity="{Binding RightFadeOpacity}">
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Color="#00000000" Offset="0.0" />
+                    <GradientStop Color="#E6000000" Offset="1.0" />
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <!-- RIGHT AREA: Dynamic Sliding Drawer + Control Strip Buttons + Separators + Telemetry -->
+        <StackPanel Grid.Column="1" Name="RightControlsPanel" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
+
+          <!-- Divider between Left Side (Media/Dock) and Right Controls -->
+          <Border Width="1" Height="18" Background="#38383A" Margin="6,0" VerticalAlignment="Center" />
+
+          <!-- SLIDING DRAWER: Smoothly expands from Width=0 to Width=240 px, sliding out to the left -->
+          <Border Width="{Binding ExpandedSliderWidth}" Height="26" ClipToBounds="True" Background="#000000" Margin="0,0,3,0"
+                  IsVisible="{Binding IsAnySliderActive}">
+            <Grid VerticalAlignment="Center">
+
+              <!-- 1. VOLUME SLIDER DRAWER (iOS/macOS Control Center Capsule Slider) -->
+              <Grid IsVisible="{Binding IsVolumeSliderActive}" VerticalAlignment="Center" Width="234">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="26" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="202" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Close X Button -->
+                <Border Grid.Column="0" Width="26" Height="26" Background="#262629" CornerRadius="8">
+                  <Button Width="26" Height="26" Click="OnCloseSliderClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#AEAEB2"
+                               Text="&#xE711;" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Button>
+                </Border>
+
+                <!-- macOS / iOS Control Center Thick Capsule Slider -->
+                <Border Grid.Column="2" Name="VolumeCapsuleBorder" Width="202" Height="26"
+                        Background="#262629" CornerRadius="13" ClipToBounds="True"
+                        PointerPressed="OnVolumeCapsulePointer" PointerMoved="OnVolumeCapsulePointer"
+                        PointerReleased="OnVolumeCapsulePointerReleased">
+                  <Grid>
+                    <!-- White / Accent Fill from Left to Right -->
+                    <Border HorizontalAlignment="Left" Width="{Binding VolumePillFillWidth}" Height="26"
+                            CornerRadius="13" Background="{Binding VolumeSliderFillBrush}" IsHitTestVisible="False" />
+
+                    <!-- Inner Speaker / Mute Icon on the Left with Dynamic Contrast Color -->
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"
+                               FontFamily="Segoe MDL2 Assets" FontSize="13" Text="{Binding VolumeButtonGlyph}"
+                               Foreground="{Binding VolumeCapsuleIconBrush}" IsHitTestVisible="False" />
+
+                    <!-- Inner Volume Percent Text on the Right with Dynamic Contrast Color -->
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0"
+                               FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="SemiBold"
+                               Text="{Binding VolumePercentText}" Foreground="{Binding VolumeCapsuleTextBrush}" IsHitTestVisible="False" />
+                  </Grid>
+                </Border>
+              </Grid>
+
+              <!-- 2. BRIGHTNESS SLIDER DRAWER (iOS/macOS Control Center Capsule Slider) -->
+              <Grid IsVisible="{Binding IsBrightnessSliderActive}" VerticalAlignment="Center" Width="234">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="26" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="38" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="158" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Close X Button -->
+                <Border Grid.Column="0" Width="26" Height="26" Background="#262629" CornerRadius="8">
+                  <Button Width="26" Height="26" Click="OnCloseSliderClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#AEAEB2"
+                               Text="&#xE711;" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Button>
+                </Border>
+
+                <!-- Auto Brightness Toggle Pill -->
+                <Border Grid.Column="2" Width="38" Height="26" Background="{Binding AutoBrightnessButtonBg}" CornerRadius="8">
+                  <Button Width="38" Height="26" Click="OnAutoBrightnessClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="10" FontWeight="Bold"
+                               Foreground="{Binding AutoBrightnessButtonFg}" Text="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Button>
+                </Border>
+
+                <!-- macOS / iOS Control Center Thick Capsule Slider -->
+                <Border Grid.Column="4" Name="BrightnessCapsuleBorder" Width="158" Height="26"
+                        Background="#262629" CornerRadius="13" ClipToBounds="True"
+                        PointerPressed="OnBrightnessCapsulePointer" PointerMoved="OnBrightnessCapsulePointer"
+                        PointerReleased="OnBrightnessCapsulePointerReleased">
+                  <Grid>
+                    <!-- White Fill from Left to Right -->
+                    <Border HorizontalAlignment="Left" Width="{Binding BrightnessPillFillWidth}" Height="26"
+                            CornerRadius="13" Background="#FFFFFF" />
+
+                    <!-- Inner Sun Icon on the Left with Dynamic Contrast Color -->
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"
+                               FontFamily="Segoe MDL2 Assets" FontSize="13" Text="&#xE706;"
+                               Foreground="{Binding BrightnessCapsuleIconBrush}" IsHitTestVisible="False" />
+
+                    <!-- Inner Brightness Percent Text on the Right with Dynamic Contrast Color -->
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0"
+                               FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="SemiBold"
+                               Text="{Binding BrightnessPercentText}" Foreground="{Binding BrightnessCapsuleTextBrush}" IsHitTestVisible="False" />
+                  </Grid>
+                </Border>
+              </Grid>
+
+              <!-- 3. POWER MENU DRAWER (Cancel, Lock, Restart, 2-Tap Shutdown) -->
+              <Grid IsVisible="{Binding IsPowerMenuActive}" VerticalAlignment="Center" Width="240">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="26" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="50" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="64" />
+                  <ColumnDefinition Width="6" />
+                  <ColumnDefinition Width="82" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Close / Cancel Button -->
+                <Border Grid.Column="0" Width="26" Height="26" Background="#262629" CornerRadius="8">
+                  <Button Width="26" Height="26" Click="OnClosePowerMenuClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#AEAEB2"
+                               Text="&#xE711;" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Button>
+                </Border>
+
+                <!-- Lock Button -->
+                <Border Grid.Column="2" Width="50" Height="26" Background="#262629" CornerRadius="8">
+                  <Button Width="50" Height="26" Click="OnPowerLockClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                      <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#F2F2F7" Text="&#xE72E;" Margin="0,0,3,0" VerticalAlignment="Center" />
+                      <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="Medium" Foreground="#F2F2F7" Text="{Binding PowerLockText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Button>
+                </Border>
+
+                <!-- Restart Button (replaces Sleep) -->
+                <Border Grid.Column="4" Width="64" Height="26" Background="#262629" CornerRadius="8">
+                  <Button Width="64" Height="26" Click="OnPowerRestartClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                      <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#0A84FF" Text="&#xE777;" Margin="0,0,3,0" VerticalAlignment="Center" />
+                      <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="Medium" Foreground="#F2F2F7" Text="{Binding PowerRestartText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Button>
+                </Border>
+
+                <!-- Shutdown Button with 2-tap confirmation -->
+                <Border Grid.Column="6" Width="82" Height="26" Background="{Binding ShutdownButtonBackground}" CornerRadius="8">
+                  <Button Width="82" Height="26" Click="OnPowerShutdownClicked"
+                          BorderThickness="0" Background="Transparent" Padding="0"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                      <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{Binding ShutdownButtonForeground}"
+                                 Text="&#xE7E8;" Margin="0,0,3,0" VerticalAlignment="Center" />
+                      <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="SemiBold" Foreground="{Binding ShutdownButtonForeground}"
+                                 Text="{Binding ShutdownButtonText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Button>
+                </Border>
+              </Grid>
+
+            </Grid>
+          </Border>
+
+          <!-- ALWAYS-VISIBLE CONTROL STRIP BUTTONS (Group: Sliders) -->
+          <!-- Brightness Button -->
+          <Border Margin="3,0" Width="36" Height="26" Background="{Binding BrightnessButtonBackground}" CornerRadius="8"
+                  IsVisible="{Binding IsBrightnessWidgetEnabled}">
+            <Button Width="36" Height="26" Click="OnBrightnessClicked"
+                    BorderThickness="0" Background="Transparent" Foreground="{Binding BrightnessButtonForeground}"
+                    FontFamily="Segoe MDL2 Assets" FontSize="13" Content="&#xE706;"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+          </Border>
+
+          <!-- Volume Button -->
+          <Border Margin="3,0" Width="36" Height="26" Background="{Binding VolumeButtonBackground}" CornerRadius="8"
+                  IsVisible="{Binding IsVolumeWidgetEnabled}">
+            <Button Width="36" Height="26" Click="OnVolumeClicked"
+                    BorderThickness="0" Background="Transparent" Foreground="{Binding VolumeButtonForeground}"
+                    FontFamily="Segoe MDL2 Assets" FontSize="13" Content="{Binding VolumeButtonGlyph}"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+          </Border>
+
+          <!-- Divider between Sliders and Telemetry -->
+          <Border Width="1" Height="18" Background="#38383A" Margin="5,0" VerticalAlignment="Center" />
+
+          <!-- Realtime Telemetry Widget (Clock, Battery, CPU Temp) -->
+          <Border Height="26" Background="#262629" CornerRadius="8" Margin="3,0" Padding="8,0"
+                  VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <!-- Current Time with Tabular Font -->
+              <TextBlock Text="{Binding Telemetry.TimeString}" Foreground="#F2F2F7"
+                         FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                         IsVisible="{Binding IsClockWidgetEnabled}" />
+
+              <!-- Battery (if available) -->
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding ShowBatteryWidget}">
+                <Border Width="1" Height="10" Background="#3A3A3E" Margin="6,0" VerticalAlignment="Center" />
+                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{Binding Telemetry.BatteryColor}"
+                           Text="{Binding Telemetry.BatteryGlyph}" VerticalAlignment="Center" Margin="0,0,3,0" />
+                <TextBlock Text="{Binding Telemetry.BatteryText}" Foreground="#F2F2F7"
+                           FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="10" FontWeight="Medium" VerticalAlignment="Center" />
+              </StackPanel>
+
+              <!-- CPU Temperature (gracefully hidden if sensor not available) -->
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding ShowCpuTempWidget}">
+                <Border Width="1" Height="10" Background="#3A3A3E" Margin="6,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Telemetry.CpuTempText}" Foreground="#FF9F0A"
+                           FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Divider between Telemetry and Power -->
+          <Border Width="1" Height="18" Background="#38383A" Margin="5,0" VerticalAlignment="Center" />
+
+          <!-- Power / Shutdown Button -->
+          <Border Margin="3,0" Width="36" Height="26" Background="{Binding PowerButtonBackground}" CornerRadius="8"
+                  IsVisible="{Binding IsPowerWidgetEnabled}">
+            <Button Width="36" Height="26" Click="OnPowerClicked"
+                    BorderThickness="0" Background="Transparent" Foreground="{Binding PowerButtonForeground}"
+                    FontFamily="Segoe MDL2 Assets" FontSize="13" Content="&#xE7E8;"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+          </Border>
+
+        </StackPanel>
+      </Grid>
+
+      <!-- MODE 3: TOUCH ID / WINDOWS HELLO BIOMETRIC PROMPT OVERLAY (macOS Style) -->
+      <Grid IsVisible="{Binding IsTouchIdOverlayVisible}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#000000">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: Cancel Button (Sends Escape to CredentialUIBroker / dismisses prompt) -->
+        <Border Grid.Column="0" Margin="6,2" Width="68" Height="26" Background="#262629" CornerRadius="8" VerticalAlignment="Center">
+          <Button Width="68" Height="26" Click="OnTouchIdCancelClicked"
+                  BorderThickness="0" Background="Transparent" Foreground="#F2F2F7"
+                  FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif" FontSize="11" FontWeight="Medium"
+                  Content="{Binding TouchIdCancelText}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+        </Border>
+
+        <!-- Center: Fingerprint Icon + Instruction Text -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#0A84FF" Text="&#xE928;"
+                     VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                     FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"
+                     Text="{Binding TouchIdPromptText}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Right: Animated Pulsing Arrow Pointing Towards Physical Touch ID Sensor (Power Button) -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+          <TextBlock FontFamily="Segoe UI Variable Text, SF Pro Text, Segoe UI, sans-serif"
+                     FontSize="11" FontWeight="Medium" Foreground="#8E8E93"
+                     Text="Touch ID" VerticalAlignment="Center" Margin="0,0,6,0" />
+          <Border Width="26" Height="26" Background="#262629" CornerRadius="13" VerticalAlignment="Center">
+            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#0A84FF"
+                       Text="&#xE76C;" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock.RenderTransform>
+                <TranslateTransform X="{Binding TouchIdArrowOffsetX}" />
+              </TextBlock.RenderTransform>
+            </TextBlock>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- FREE ROAMING ANIME MASCOT OVERLAY CANVAS (No Capsule, Walks Across Entire Touch Bar) -->
+    <Canvas Grid.Column="0" Grid.ColumnSpan="2" IsHitTestVisible="False" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+            IsVisible="{Binding Companion.IsPetVisible}">
+      <Image Source="{Binding Companion.CompanionImage}"
+             Canvas.Left="{Binding Companion.PositionX}"
+             Canvas.Top="{Binding Companion.PositionY}"
+             Width="{Binding Companion.CharacterWidth}"
+             Height="{Binding Companion.CharacterHeight}" />
+
+      <!-- Floating Dynamic Emote Bubble (Clean Image) -->
+      <Image Source="{Binding Companion.EmoteImage}"
+             Canvas.Left="{Binding Companion.EmoteX}"
+             Canvas.Top="0"
+             Width="14" Height="14"
+             IsVisible="{Binding Companion.IsEmoteVisible}" />
+    </Canvas>
+  </Grid>
+</UserControl>

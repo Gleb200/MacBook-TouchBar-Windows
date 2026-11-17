@@ -1,0 +1,625 @@
+<Window x:Class="TouchBarSettings.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Touch Bar Control Center" Height="680" Width="840"
+        MinHeight="580" MinWidth="740"
+        WindowStartupLocation="CenterScreen"
+        Background="#181818" Foreground="#F0F0F0"
+        FontFamily="Segoe UI Variable Text, Segoe UI, sans-serif"
+        Icon="app.ico">
+
+    <Window.Resources>
+        <!-- Windows 11 Fluent Dark Colors -->
+        <SolidColorBrush x:Key="CardBackground" Color="#242424" />
+        <SolidColorBrush x:Key="CardBorder" Color="#333333" />
+        <SolidColorBrush x:Key="AccentColor" Color="#0078D4" />
+        <SolidColorBrush x:Key="AccentHover" Color="#1E8AD3" />
+        <SolidColorBrush x:Key="SecondaryText" Color="#9E9E9E" />
+        <SolidColorBrush x:Key="ControlBackground" Color="#2E2E2E" />
+
+        <!-- Card Container Style -->
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!-- Custom TabItem Style -->
+        <Style TargetType="TabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" CornerRadius="6" Margin="0,0,8,0" Padding="14,8" Background="Transparent">
+                            <ContentPresenter ContentSource="Header" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#2F2F2F" />
+                                <Setter Property="Foreground" Value="#4CC2FF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Foreground" Value="#B0B0B0" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#262626" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Button Style -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#2D2D2D" />
+            <Setter Property="Foreground" Value="#F0F0F0" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BtnBorder" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="#383838" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="#222222" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Accent Button -->
+        <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#0078D4" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#0063B1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BtnBorder" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="#1E8AD3" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="#005A9E" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern CheckBox Style -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#F0F0F0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+
+        <!-- Fluent Dark ComboBox ToggleButton Template -->
+        <ControlTemplate x:Key="DarkComboBoxToggleButtonTemplate" TargetType="{x:Type ToggleButton}">
+            <Border x:Name="templateRoot" Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="6" SnapsToDevicePixels="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="28" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Down arrow chevron -->
+                    <Path x:Name="arrow" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Data="M 0 0 L 4 4 L 8 0" Stroke="#A0A0A0" StrokeThickness="1.5" SnapsToDevicePixels="True" />
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="templateRoot" Property="Background" Value="#333333" />
+                    <Setter TargetName="templateRoot" Property="BorderBrush" Value="#4F4F4F" />
+                    <Setter TargetName="arrow" Property="Stroke" Value="#FFFFFF" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="templateRoot" Property="Background" Value="#2A2A2A" />
+                    <Setter TargetName="templateRoot" Property="BorderBrush" Value="#0078D4" />
+                    <Setter TargetName="arrow" Property="Stroke" Value="#4CC2FF" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="templateRoot" Property="Opacity" Value="0.5" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- Fluent Dark ComboBoxItem Style -->
+        <Style TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Foreground" Value="#F0F0F0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                        <Border x:Name="ItemBorder" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Margin="2,1" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#383838" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#0078D4" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True" />
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#1E8AD3" />
+                            </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#666666" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Fluent Dark ComboBox Style -->
+        <Style TargetType="{x:Type ComboBox}">
+            <Setter Property="Foreground" Value="#F0F0F0" />
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MaxDropDownHeight" Value="240" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBox}">
+                        <Grid x:Name="templateRoot" SnapsToDevicePixels="True">
+                            <ToggleButton x:Name="toggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Template="{StaticResource DarkComboBoxToggleButtonTemplate}" />
+
+                            <ContentPresenter x:Name="contentPresenter"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              IsHitTestVisible="False"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Bottom"
+                                   PopupAnimation="Slide">
+                                <Border x:Name="dropDownBorder"
+                                        Background="#252525"
+                                        BorderBrush="#3D3D3D"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="3,4"
+                                        Margin="0,2,0,0"
+                                        MinWidth="{Binding ActualWidth, ElementName=templateRoot}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer x:Name="DropDownScrollViewer" CanContentScroll="True"
+                                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsPresenter x:Name="ItemsPresenter"
+                                                        KeyboardNavigation.DirectionalNavigation="Contained"
+                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="templateRoot" Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24,20,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER SECTION -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="💻" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Name="TxtAppTitle" Text="Touch Bar Control Center" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Name="TxtAppSubtitle" Text="Конфигуратор параметров, виджетов и персонажа панели Touch Bar (Windows 11)"
+                           FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="28,2,0,0" />
+            </StackPanel>
+
+            <!-- Right side: Language Selector + Status Pill -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Name="TxtLanguageLabel" Text="Язык:" FontSize="12" Foreground="{StaticResource SecondaryText}"
+                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox Name="CmbLanguage" Width="150" Margin="0,0,16,0" VerticalAlignment="Center"
+                          SelectionChanged="OnLanguageSelectionChanged">
+                    <ComboBoxItem Name="CmbItemLangAuto" Content="Авто (Система)" Tag="Auto" />
+                    <ComboBoxItem Name="CmbItemLangRu" Content="Русский" Tag="ru" />
+                    <ComboBoxItem Name="CmbItemLangEn" Content="English" Tag="en" />
+                </ComboBox>
+
+                <!-- Status Pill -->
+                <Border Background="#1D382B" BorderBrush="#2D6346" BorderThickness="1" CornerRadius="12" Padding="12,5" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Fill="#30D158" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Name="TxtServiceActive" Text="Служба активна" FontSize="11" FontWeight="SemiBold" Foreground="#30D158" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- 2. TABS CONTENT -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,0,0,14">
+
+            <!-- TAB 1: GENERAL & DISPLAY -->
+            <TabItem Name="TabGeneral" Header="⚙  Экран и система">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+                    <StackPanel Margin="0,0,8,0">
+
+                        <!-- Card 1: OLED Brightness -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0">
+                                    <TextBlock Name="TxtOledBrightnessTitle" Text="Яркость OLED-панели Touch Bar" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtOledBrightnessDesc" Text="Регулировка аппаратной яркости дисплея Touch Bar (10%–100%)"
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,0,8" />
+                                </StackPanel>
+
+                                <Grid Grid.Row="1" Margin="0,4,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider Name="SliderTouchBarBrightness" Minimum="10" Maximum="100" Value="100"
+                                            TickFrequency="1" IsSnapToTickEnabled="True"
+                                            VerticalAlignment="Center" ValueChanged="OnBrightnessSliderChanged" />
+                                    <TextBlock Grid.Column="1" Name="TxtBrightnessValue" Text="100%"
+                                               FontSize="13" FontWeight="Bold" Foreground="#4CC2FF"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <CheckBox Grid.Row="2" Name="ChkSyncBrightness" Content="Привязать к яркости основного дисплея"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 2: Virtual ESC Button -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="200" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="TxtEscKeyTitle" Text="Виртуальная кнопка ESC" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtEscKeyDesc" Text="Отображать виртуальную клавишу ESC в левом краю Touch Bar для моделей MacBook Pro без физической кнопки (2016–2019)."
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Name="CmbEscMode" VerticalAlignment="Center" SelectionChanged="OnEscModeChanged">
+                                    <ComboBoxItem Name="CmbItemEscAuto" Content="Авто (по модели Mac)" Tag="Auto" IsSelected="True" />
+                                    <ComboBoxItem Name="CmbItemEscOn" Content="Всегда показывать" Tag="AlwaysOn" />
+                                    <ComboBoxItem Name="CmbItemEscOff" Content="Скрыть" Tag="AlwaysOff" />
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 3: Sleep Timeout -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="190" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="TxtSleepTimeoutTitle" Text="Тайм-аут автовыключения экрана (OLED Sleep)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtSleepTimeoutDesc" Text="Отключает пиксели при бездействии для защиты от выгорания OLED. Мгновенно просыпается при касании или нажатии клавиш."
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Name="CmbSleepTimeout" VerticalAlignment="Center" SelectionChanged="OnSleepTimeoutChanged">
+                                    <ComboBoxItem Name="CmbItemSleep15" Content="15 секунд" Tag="15" />
+                                    <ComboBoxItem Name="CmbItemSleep30" Content="30 секунд" Tag="30" />
+                                    <ComboBoxItem Name="CmbItemSleep60" Content="1 минута" Tag="60" />
+                                    <ComboBoxItem Name="CmbItemSleep180" Content="3 минуты" Tag="180" />
+                                    <ComboBoxItem Name="CmbItemSleep0" Content="Никогда (выкл)" Tag="0" IsSelected="True" />
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 3: Fn Keys -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="TxtFnKeysTitle" Text="Ряд клавиш F1–F12 при удержании Fn" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtFnKeysDesc" Text="Отображать функциональный ряд клавиш F1–F12 при нажатии и удержании физической кнопки Fn."
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Name="ChkShowFnKeys" VerticalAlignment="Center"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 4: AutoStart -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="TxtAutoStartTitle" Text="Автозапуск с Windows в трей" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtAutoStartDesc" Text="Запускать панель Touch Bar в Планировщике Windows с повышенными правами (без окна UAC, включая работу от аккумулятора)."
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Name="ChkAutoStart" VerticalAlignment="Center"
+                                          Checked="OnAutoStartToggled" Unchecked="OnAutoStartToggled" />
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: PETS & CUSTOM CHARACTERS -->
+            <TabItem Name="TabPets" Header="🐾  Персонаж и скины">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+                    <StackPanel Margin="0,0,8,0">
+
+                        <!-- Card 1: Master Pet Switch & Skin Selection -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Name="TxtPetMasterTitle" Text="Анимированный персонаж на панели" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                        <TextBlock Name="TxtPetMasterDesc" Text="Компаньон ходит по свободной части тачбара, танцует под музыку и реагирует на касания."
+                                                   FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Name="ChkPetEnabled" VerticalAlignment="Center"
+                                              Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+                                </Grid>
+
+                                <Separator Background="#333333" Margin="0,4,0,12" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Skin Selection -->
+                                    <TextBlock Grid.Column="0" Name="TxtCurrentSkinLabel" Text="Текущий скин:" FontSize="13" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                    <ComboBox Grid.Column="1" Name="CmbPetSkin" VerticalAlignment="Center" Margin="0,0,12,0"
+                                              SelectionChanged="OnPetSkinSelectionChanged" />
+
+                                    <!-- Import Custom Pet Button -->
+                                    <Button Grid.Column="2" Name="BtnImportPet" Content="📁  Импорт персонажа..."
+                                            VerticalAlignment="Center" Click="OnImportPetClicked" />
+                                </Grid>
+                                <TextBlock Name="TxtImportPetHint" Text="Поддерживается импорт анимированных .gif или папок со спрайтами .png. Кадры автоматически оптимизируются и масштабируются по высоте до 50 px с сохранением прозрачности."
+                                           FontSize="11" Foreground="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 2: Pet Behavior Settings -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <StackPanel>
+                                <TextBlock Name="TxtPetBehaviorTitle" Text="Настройки поведения персонажа" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,10" />
+
+                                <!-- Speed Slider -->
+                                <Grid Margin="0,4,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="50" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Name="TxtPetWalkSpeed" Text="Скорость ходьбы:" FontSize="13" VerticalAlignment="Center" Foreground="#FFFFFF" />
+                                    <Slider Grid.Column="1" Name="SliderPetSpeed" Minimum="0.5" Maximum="3.0" Value="1.0"
+                                            TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                            ValueChanged="OnPetSpeedChanged" />
+                                    <TextBlock Grid.Column="2" Name="TxtPetSpeedValue" Text="1.0x"
+                                               FontSize="13" FontWeight="Bold" Foreground="#4CC2FF"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Separator Background="#333333" Margin="0,4,0,10" />
+
+                                <!-- Touch React -->
+                                <CheckBox Name="ChkPetReactToTouch" Content="Реагировать на нажатие пальцем (перетаскивание, эмоции сердечка и сон)"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+
+                                <!-- CPU Speedup -->
+                                <CheckBox Name="ChkPetCpuSpeedup" Content="Ускоряться при высокой загрузке CPU (персонаж начинает бежать)"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+
+                                <!-- Static Pinning Toggle -->
+                                <CheckBox Name="ChkPetPinned" Content="📌 Закрепить персонажа на месте (передвижение только пальцем)"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 3: WIDGETS & OVERLAYS -->
+            <TabItem Name="TabWidgets" Header="🧩  Виджеты и оверлеи">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+                    <StackPanel Margin="0,0,8,0">
+
+                        <!-- Card 1: Widgets Ordering and Visibility -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <StackPanel>
+                                <TextBlock Name="TxtWidgetsOrderTitle" Text="Состав и порядок виджетов панели" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                <TextBlock Name="TxtWidgetsOrderDesc" Text="Отмечайте галочками активные элементы панели и настраивайте их приоритет кнопками «Вверх» и «Вниз»:"
+                                           FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,0,10" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="110" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Widget List -->
+                                    <ListBox Grid.Column="0" Name="LstWidgets" Height="170" Background="#1D1D1D" BorderBrush="#383838" BorderThickness="1"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="4,2">
+                                                    <CheckBox IsChecked="{Binding Enabled}" Content="{Binding Name}" VerticalAlignment="Center"
+                                                              Checked="OnWidgetListChanged" Unchecked="OnWidgetListChanged" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <!-- Up / Down Buttons -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                        <Button Name="BtnUpWidget" Content="▲  Вверх" Margin="0,0,0,8" Click="OnWidgetMoveUpClicked" />
+                                        <Button Name="BtnDownWidget" Content="▼  Вниз" Click="OnWidgetMoveDownClicked" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 2: CPU Temperature Source -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="230" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="TxtCpuTempTitle" Text="Источник температуры процессора (CPU)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                    <TextBlock Name="TxtCpuTempDesc" Text="Механизм автономного считывания температуры без зависаний WMI на чипах Apple T2."
+                                               FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Name="CmbCpuTempSource" VerticalAlignment="Center" SelectionChanged="OnCpuTempSourceChanged">
+                                    <ComboBoxItem Name="CmbItemCpuAuto" Content="Auto (Shared Memory -> MSR)" Tag="Auto" IsSelected="True" />
+                                    <ComboBoxItem Name="CmbItemCpuWmf" Content="Only WMF Control" Tag="WMFOnly" />
+                                    <ComboBoxItem Name="CmbItemCpuDisabled" Content="Отключено (Disabled)" Tag="Disabled" />
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 3: System Overlays -->
+                        <Border Style="{StaticResource SettingCard}">
+                            <StackPanel>
+                                <TextBlock Name="TxtOverlaysTitle" Text="Системные оверлеи и события" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,8" />
+
+                                <CheckBox Name="ChkOverlayTouchId" Content="Подсказка сканера Touch ID (Windows Hello при запросе отпечатка)"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+
+                                <CheckBox Name="ChkOverlayUac" Content="Кнопки подтверждения UAC и системных диалогов администратора"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+
+                                <CheckBox Name="ChkOverlayCharging" Content="Баннер и анимация подключения зарядного устройства (MagSafe / Type-C)"
+                                          Checked="OnSettingChanged" Unchecked="OnSettingChanged" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- 3. BOTTOM ACTION BAR -->
+        <Border Grid.Row="2" Background="#242424" BorderBrush="#333333" BorderThickness="1" CornerRadius="8" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="✓" FontSize="13" FontWeight="Bold" Foreground="#30D158" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Name="TxtSavedAutoNote" Text="Изменения сохраняются в config.json и применяются на лету" FontSize="12" Foreground="{StaticResource SecondaryText}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Button Grid.Column="1" Name="BtnResetDefaults" Content="Сбросить по умолчанию" Margin="0,0,8,0" Click="OnResetDefaultsClicked" />
+                <Button Grid.Column="2" Name="BtnApply" Style="{StaticResource AccentButton}" Content="Сохранить и применить" Click="OnApplyClicked" />
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

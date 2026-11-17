@@ -1,4 +1,4 @@
-# Touch Bar for Windows (MacBook Pro Edition)
+﻿# Touch Bar for Windows (MacBook Pro Edition)
 
 <p align="center">
   <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.0-blue.svg" alt="Release" /></a>
@@ -49,6 +49,9 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
   <img src="https://github.com/user-attachments/assets/62e02bac-4903-44ab-bd7b-dca24ab40fbf" width="520" alt="TouchBar Settings" /><br>
   <em>TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.</em>
 </p>
+
+---
+
 ## Key Features
 
 ### 1. Direct 60 FPS Hardware Framebuffer Rendering
@@ -138,6 +141,9 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 ### Step 1: Prepare Windows & Driver
 
+> [!TIP]
+> **Driver Already Included:** The `DFRDisplayKm` driver is already bundled inside the release archive (`TouchBar-Windows-v1.0.0-win64.zip`) in the `Driver/` folder! You do **not** need to download it separately.
+
 1. **Turn off Secure Boot:**
    * Restart your Mac and hold `Cmd + R` to enter **macOS Recovery**.
    * In the top menu bar, open **Utilities** $\rightarrow$ **Startup Security Utility**.
@@ -154,9 +160,8 @@ An automatic multi-source thermal engine that gracefully falls back across senso
    * *(Note: If you ever want to turn off test mode later, run: `bcdedit -set TESTSIGNING OFF` and reboot).*
 
 3. **Install DFRDisplayKm Driver:**
-   * Download the driver from **[Naozumi520/DFRDisplayKm Releases](https://github.com/Naozumi520/DFRDisplayKm/releases)**.
-   * Extract the downloaded driver archive.
-   * Right-click `DFRDisplayKm.inf` and select **Install**.
+   * **Included in Release:** Simply open the extracted release folder $\rightarrow$ `Driver/`, right-click `DFRDisplayKm.inf`, and select **Install**.
+   * *(Optional / Alternative download: [Naozumi520/DFRDisplayKm Releases](https://github.com/Naozumi520/DFRDisplayKm/releases)).*
    * Check **Device Manager**: under **System devices** or **Universal Serial Bus devices**, verify that `Apple Touch Bar Display` is working properly.
 
 ---
