@@ -1,10 +1,6 @@
 # Touch Bar for Windows (MacBook Pro Edition)
 
 <p align="center">
-  <img src="app.png" width="140" height="140" alt="Touch Bar for Windows" />
-</p>
-
-<p align="center">
   <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.0-blue.svg" alt="Release" /></a>
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-informational.svg" alt="Platform: Windows 10 | 11 (x64)" />
@@ -19,11 +15,63 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 
 ---
 
+## Screenshots
+
+<!-- ============================================================== -->
+<!-- PHOTO 1: Overall Photo of Touch Bar in Action                  -->
+<!-- ВСТАВИТЬ СЮДА: Общее фото физического тачбара в работе         -->
+<!-- (виджеты, адаптивный док приложений, питомец, кнопки)          -->
+<!-- ============================================================== -->
+### 1. Overall Touch Bar View
+![Touch Bar Overview](screenshots/touchbar_overview.png)
+*General view of the Touch Bar in action: ESC button, adaptive dock, volume/brightness controls, and companion pet.*
+
+<!-- ============================================================== -->
+<!-- PHOTO 2: Brightness Slider Drawer                              -->
+<!-- ВСТАВИТЬ СЮДА: Фото/скриншот выдвинутого слайдера яркости       -->
+<!-- (капсульный слайдер и кнопка авто-яркости на тачбаре)          -->
+<!-- ============================================================== -->
+### 2. Brightness Slider
+![Brightness Slider](screenshots/brightness_slider.png)
+*Touch Bar brightness slider drawer with real-time level adjustment and auto-brightness toggle.*
+
+<!-- ============================================================== -->
+<!-- PHOTO 3: Touch ID / Windows Hello Fingerprint Prompt           -->
+<!-- ВСТАВИТЬ СЮДА: Фото/скриншот баннера-просьбы приложить палец   -->
+<!-- (оверлей Touch ID / Windows Hello в стиле macOS на тачбаре)    -->
+<!-- ============================================================== -->
+### 3. Touch ID & Windows Hello Prompt
+![Touch ID Prompt](screenshots/touch_id_prompt.png)
+*macOS-style Touch ID / Windows Hello biometric verification prompt on the Touch Bar.*
+
+> [!IMPORTANT]
+> **Touch ID Sensor in Windows:** To enable the physical Touch ID fingerprint sensor on Apple T2 MacBook Pro under Windows, install the open-source driver from **[Osaul4ik/apple-t2-touchid-windows](https://github.com/Osaul4ik/apple-t2-touchid-windows)**.
+
+<!-- ============================================================== -->
+<!-- PHOTO 4: Media Control Strip / Now Playing Music Display       -->
+<!-- ВСТАВИТЬ СЮДА: Фото/скриншот отображения музыки (SMTC)         -->
+<!-- (название трека, автор, кнопки воспроизведения, танцы питомца) -->
+<!-- ============================================================== -->
+### 4. Media Playback (Now Playing)
+![Media Playback Strip](screenshots/media_player.png)
+*Live SMTC media strip displaying current track name, artist, and playback controls with companion pet dancing to music.*
+
+<!-- ============================================================== -->
+<!-- PHOTO 5: Settings Application (TouchBarSettings.exe)           -->
+<!-- ВСТАВИТЬ СЮДА: Общий скриншот окна программы TouchBarSettings  -->
+<!-- (WPF Control Center в темной теме Windows 11)                  -->
+<!-- ============================================================== -->
+### 5. Control Center & Settings Application
+![TouchBar Settings](screenshots/settings_overview.png)
+*TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.*
+
+---
+
 ## Key Features
 
 ### 1. Direct 60 FPS Hardware Framebuffer Rendering
 * Driven by the low-level `DFRDisplayKm.sys` kernel driver and `Avalonia.DfrFrameBuffer.dll`.
-* Writes directly to the USB framebuffer endpoint (`\\.\DFRDisplayKm`) at 60 FPS with minimal CPU overhead (~0.1% вЂ“ 0.3%).
+* Writes directly to the USB framebuffer endpoint (`\\.\DFRDisplayKm`) at 60 FPS with minimal CPU overhead (~0.1% – 0.3%).
 * Dedicated digitizer touch processing with sub-pixel touch tracking and zero-latency feedback.
 
 ### 2. Intelligent Windows Core Audio Control
@@ -42,7 +90,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 * **Power Management Drawer:**
   * Quick Lock (`LockWorkStation`).
   * Restart (`shutdown /r /t 0`).
-  * Shut Down with two-step confirmation ("Shut Down" $\rightarrow$ "Confirm?" / "Р’С‹РєР»" $\rightarrow$ "РўРѕС‡РЅРѕ?") to prevent accidental taps.
+  * Shut Down with two-step confirmation ("Shut Down" $\rightarrow$ "Confirm?") to prevent accidental taps.
 
 ### 4. Adaptive App Switcher / Dock (macOS-Style)
 * **Live Running Applications:**
@@ -63,7 +111,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
   * Walking with direction flips, idle breathing, and sleeping when the system is inactive.
   * **Music Dancing:** Characters dance whenever media playback is active!
   * **Touch Gestures:** Drag and drop pets along the Touch Bar; tap to trigger affection emotes (hearts, notes, sparks).
-* **Static Pinning Mode (рџ“Њ):**
+* **Static Pinning Mode (📌):**
   Lock the character in place so it stays stationary and only moves when dragged with a finger.
 
 ### 6. Media Control Strip (Now Playing / SMTC)
@@ -88,9 +136,9 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 ### 8. MacBook Pro Hardware Integrations
 * **Virtual ESC Key:**
-  Essential left-aligned Escape key for 2016вЂ“2019 MacBook Pro models lacking a physical Escape key.
-* **Global Fn Row (F1вЂ“F12):**
-  Holding the physical `Fn` key on the MacBook keyboard flips the bar into standard F1вЂ“F12 keys.
+  Essential left-aligned Escape key for 2016–2019 MacBook Pro models lacking a physical Escape key.
+* **Global Fn Row (F1–F12):**
+  Holding the physical `Fn` key on the MacBook keyboard flips the bar into standard F1–F12 keys.
 * **System Overlays:**
   * Windows Hello / Touch ID biometric prompt banner.
   * Administrator UAC elevation dialog confirm buttons.
@@ -104,27 +152,40 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 ---
 
-## Prerequisites
+## Installation
 
-1. **DFRDisplayKm Driver:**
-   Install the open-source Touch Bar display driver by Bingxing Wang ([imbushuo/DFRDisplayKm](https://github.com/imbushuo/DFRDisplayKm)).
-   * Download the driver release package.
+### Step 1: Prepare Windows & Driver
+
+1. **Turn off Secure Boot:**
+   * Restart your Mac and hold `Cmd + R` to enter **macOS Recovery**.
+   * In the top menu bar, open **Utilities** $\rightarrow$ **Startup Security Utility**.
+   * Set **Secure Boot** to **No Security** (required to load third-party kernel drivers in Windows Boot Camp).
+   * Restart back into Windows.
+
+2. **Enable Windows Test Mode:**
+   * Open **Command Prompt (CMD)** with administrative privileges (Right-click $\rightarrow$ Run as administrator).
+   * Type:
+     ```cmd
+     bcdedit -set TESTSIGNING ON
+     ```
+   * Reboot your computer.
+   * *(Note: If you ever want to turn off test mode later, run: `bcdedit -set TESTSIGNING OFF` and reboot).*
+
+3. **Install DFRDisplayKm Driver:**
+   * Download the driver from **[Naozumi520/DFRDisplayKm Releases](https://github.com/Naozumi520/DFRDisplayKm/releases)**.
+   * Extract the downloaded driver archive.
    * Right-click `DFRDisplayKm.inf` and select **Install**.
-   * Ensure device `Apple Touch Bar Display` appears working under Device Manager.
-2. **.NET Desktop Runtime:**
-   * .NET Core 3.1 Desktop Runtime (x64) or included standalone runtime.
-3. **Apple Boot Camp:**
-   * Intel MacBook Pro (2016вЂ“2020) running Windows 10 or Windows 11 (64-bit).
+   * Check **Device Manager**: under **System devices** or **Universal Serial Bus devices**, verify that `Apple Touch Bar Display` is working properly.
 
 ---
 
-## Installation & Quick Start
+### Step 2: Quick Start
 
-1. Download the latest **`TouchBar-Windows-v1.0.0-win64.zip`** from [Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases).
-2. Extract the archive into a permanent folder (e.g. `C:\Program Files\TouchBar` or any user directory).
-3. Right-click **`Р”РѕР±Р°РІРёС‚СЊ_РІ_РђРІС‚РѕР·Р°РіСЂСѓР·РєСѓ.bat`** and select **Run as administrator** (or launch `TouchBar.exe` directly).
-   * This registers the silent Windows Task Scheduler job `TouchBarAutoStart` with highest privileges, enabling autostart on battery and without UAC prompts.
-4. Launch **`РќР°СЃС‚СЂРѕР№РєРё_TouchBar.bat`** (or `TouchBarSettings.exe`) to configure widgets, choose your companion pet, and customize appearance.
+1. Download the latest release **`TouchBar-Windows-v1.0.0-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
+2. Extract the archive into a permanent folder (e.g., `C:\Program Files\TouchBar` or any folder on your drive).
+3. Right-click **`Add_to_Startup.bat`** and select **Run as administrator** (or run `Start_TouchBar.bat` / `TouchBar.exe` directly).
+   * This registers the silent Windows Task Scheduler task `TouchBarAutoStart` with highest privileges, enabling autostart on user logon even when running on battery without any UAC prompts.
+4. Launch **`TouchBar_Settings.bat`** (or `TouchBarSettings.exe`) to configure widgets, choose your companion pet, and customize appearance.
 
 ---
 
@@ -139,7 +200,7 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 ```powershell
 # Clone repository
 git clone https://github.com/Gleb200/MacBook-TouchBar-Windows.git
-cd TouchBar-Windows
+cd MacBook-TouchBar-Windows
 
 # Build entire solution in Release configuration
 dotnet build -c Release DFRContentHost.sln
@@ -155,26 +216,30 @@ Build outputs will be generated in:
 ## Project Structure
 
 ```
-в”њв”Ђв”Ђ Avalonia.DfrFrameBuffer/  # Low-level DFRDisplayKm driver bridge & touch digitizer
-в”њв”Ђв”Ђ DFRContentHost/           # Main Avalonia UI host, Control Strip, Dock, Telemetry
-в”‚   в”њв”Ђв”Ђ Assets/               # UI graphics, icons, and fonts
-в”‚   в”њв”Ђв”Ђ Interop/              # CoreAudio, CpuTemperatureMonitor, NativeMethods
-в”‚   в”њв”Ђв”Ђ Models/               # AppConfig, ConfigManager
-в”‚   в”њв”Ђв”Ђ ViewModels/           # MainViewModel, Telemetry, Companion, SMTC
-в”‚   в””в”Ђв”Ђ pets/                 # Sprite sheets for 10 companion characters
-в”њв”Ђв”Ђ TouchBarSettings/         # Fluent Dark Windows 11 WPF settings application
-в”њв”Ђв”Ђ TouchBar/                 # Elevated silent application launcher
-в”њв”Ђв”Ђ app.ico                   # Multi-resolution application icon
-в”њв”Ђв”Ђ app.png                   # High-resolution logo
-в”њв”Ђв”Ђ DFRContentHost.sln        # Visual Studio solution file
-в””в”Ђв”Ђ LICENSE.txt               # MIT License
+├── Avalonia.DfrFrameBuffer/  # Low-level DFRDisplayKm driver bridge & touch digitizer
+├── DFRContentHost/           # Main Avalonia UI host, Control Strip, Dock, Telemetry
+│   ├── Assets/               # UI graphics, icons, and fonts
+│   ├── Interop/              # CoreAudio, CpuTemperatureMonitor, NativeMethods
+│   ├── Models/               # AppConfig, ConfigManager
+│   ├── ViewModels/           # MainViewModel, Telemetry, Companion, SMTC
+│   └── pets/                 # Sprite sheets for 10 companion characters
+├── TouchBarSettings/         # Fluent Dark Windows 11 WPF settings application
+├── TouchBar/                 # Elevated silent application launcher
+├── Add_to_Startup.bat        # Configures Task Scheduler autostart on logon
+├── Remove_from_Startup.bat   # Unregisters Task Scheduler autostart
+├── Start_TouchBar.bat        # Launches the Touch Bar host
+├── Restart_TouchBar.bat      # Restarts services and Touch Bar host
+├── TouchBar_Settings.bat     # Launches the TouchBarSettings GUI
+├── DFRContentHost.sln        # Visual Studio solution file
+└── LICENSE.txt               # MIT License
 ```
 
 ---
 
 ## Acknowledgments & Credits
 
-* **Bingxing Wang ([imbushuo](https://github.com/imbushuo))** for the pioneering [DFRDisplayKm](https://github.com/imbushuo/DFRDisplayKm) kernel driver and original DFRContentHost concept.
+* **Bingxing Wang ([imbushuo](https://github.com/imbushuo))** & **[Naozumi520](https://github.com/Naozumi520/DFRDisplayKm)** for the pioneering [DFRDisplayKm](https://github.com/Naozumi520/DFRDisplayKm) kernel driver and original DFRContentHost concept.
+* **[Osaul4ik](https://github.com/Osaul4ik/apple-t2-touchid-windows)** for the Apple T2 Touch ID driver for Windows.
 * **Avalonia UI** for the cross-platform XAML framework.
 * **LibreHardwareMonitor** contributors for hardware sensor abstractions.
 * **Gleb200** for the MacBook Pro Windows Touch Bar enhancements, Core Audio dynamic device switching, adaptive dock touch scrolling, multi-source thermal engine, companion pets, and settings center.
@@ -184,4 +249,3 @@ Build outputs will be generated in:
 ## License
 
 Distributed under the [MIT License](LICENSE.txt).
-
