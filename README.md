@@ -23,7 +23,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 <!-- (виджеты, адаптивный док приложений, питомец, кнопки)          -->
 <!-- ============================================================== -->
 ### 1. Overall Touch Bar View
-![Touch Bar Overview](screenshots/touchbar_overview.png)
+![Touch Bar Overview](<https://github.com/user-attachments/assets/0efa5b2b-2d07-4e09-91bd-c5a8a8b97fa9)
 *General view of the Touch Bar in action: ESC button, adaptive dock, volume/brightness controls, and companion pet.*
 
 <!-- ============================================================== -->
