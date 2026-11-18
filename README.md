@@ -5,7 +5,6 @@
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-informational.svg" alt="Platform: Windows 10 | 11 (x64)" />
   <img src="https://img.shields.io/badge/.NET-Core%203.0%20%2F%203.1-purple.svg" alt=".NET Core 3.0 / 3.1" />
-  <a href="https://www.donationalerts.com/r/gringleb"><img src="https://img.shields.io/badge/Donate-DonationAlerts-orange.svg" alt="Donate" /></a>
 </p>
 
 **A feature-rich, high-performance Touch Bar host and Control Center for Apple MacBook Pro running Windows 10/11 through Boot Camp.**
@@ -241,16 +240,6 @@ Build outputs will be generated in:
 * **Avalonia UI** for the cross-platform XAML framework.
 * **LibreHardwareMonitor** contributors for hardware sensor abstractions.
 * **Gleb200** for the MacBook Pro Windows Touch Bar enhancements, Core Audio dynamic device switching, adaptive dock touch scrolling, multi-source thermal engine, companion pets, and settings center.
-
----
-
-## Support & Donations
-
-If you enjoy using this project on your MacBook Pro and would like to support ongoing development, maintenance, and new features:
-
-* ☕ **DonationAlerts:** [donationalerts.com/r/gringleb](https://www.donationalerts.com/r/gringleb)
-
-Your support is greatly appreciated! ❤️
 
 ---
 
