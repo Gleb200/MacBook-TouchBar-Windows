@@ -51,6 +51,7 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
   <em>TouchBarSettings.exe GUI Control Center for customizing widgets, pets, hotkeys, and display options.</em>
 </p>
 
+
 ---
 
 ## Key Features
@@ -108,8 +109,8 @@ Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 
 
 ### 7. Cascading Multi-Source CPU Thermals (Auto-Fallback)
 An automatic multi-source thermal engine that gracefully falls back across sensor providers without UI freezes or WMI locks on Apple T2 chips:
-1. **WMF Control / Macs Fan Control (Shared Memory):**
-   Reads `Local\WMF_CpuTemp`, `Global\WMF_CpuTemp`, and session mappings. Zero overhead, physical MMIO on Apple T2.
+1. **[WMF Control T2 Edition](https://github.com/Gleb200/WMF-Control-T2-Edition) / Macs Fan Control (Shared Memory):**
+   When [WMF Control T2 Edition](https://github.com/Gleb200/WMF-Control-T2-Edition) is running in the background, Touch Bar reads CPU temperature directly from fast inter-process Shared Memory (`Local\WMF_CpuTemp` / `Global\WMF_CpuTemp`). This provides instantaneous updates with zero CPU overhead without duplicating queries to the Apple T2 SMC bus. If WMF Control is not running or not installed, the engine seamlessly switches to built-in fallback sources.
 2. **LibreHardwareMonitorLib (Direct MSRs):**
    Reads Intel DTS MSRs directly via Ring0 driver with TjMax Distance filtering.
 3. **Core Temp (Shared Memory):**
@@ -221,6 +222,15 @@ Build outputs will be generated in:
 ├── DFRContentHost.sln        # Visual Studio solution file
 └── LICENSE.txt               # MIT License
 ```
+
+---
+
+## Companion App & Ecosystem
+
+> [!TIP]
+> **Recommended Companion:** For complete hardware control of your MacBook Pro (2016–2020) running Windows in Boot Camp, use this project paired with **[WMF-Control-T2-Edition](https://github.com/Gleb200/WMF-Control-T2-Edition)**.
+>
+> While **Touch Bar for Windows** gives you tactile controls, media playback, and app switching, **WMF Control T2 Edition** manages dual fan curves, monitors Apple T2 temperature sensors, and streams real-time CPU thermal data directly to the Touch Bar widget via high-speed Shared Memory (`Local\WMF_CpuTemp`) with zero CPU overhead.
 
 ---
 
