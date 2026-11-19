@@ -27,6 +27,29 @@ namespace Avalonia.DfrFrameBuffer
 
             if (instancePath == null)
             {
+                // Attempt self-healing: start the DFRDisplayKm service and re-query
+                try
+                {
+                    var psi = new System.Diagnostics.ProcessStartInfo("sc.exe", "start DFRDisplayKm")
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    using var p = System.Diagnostics.Process.Start(psi);
+                    p?.WaitForExit(1000);
+                }
+                catch { }
+
+                for (int retry = 0; retry < 6; retry++)
+                {
+                    System.Threading.Thread.Sleep(500);
+                    instancePath = Locator.FindDfrDevice();
+                    if (instancePath != null) break;
+                }
+            }
+
+            if (instancePath == null)
+            {
                 throw new Exception("DFR Display Device not found");
             }
 

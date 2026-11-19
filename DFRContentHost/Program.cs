@@ -13,6 +13,9 @@ namespace DFRContentHost
     {
         private static System.Threading.Mutex _singleInstanceMutex;
 
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
@@ -81,6 +84,25 @@ namespace DFRContentHost
                     System.IO.File.AppendAllText(logFile, $"[{DateTime.Now}] MAIN EXCEPTION: {ex}\n");
                 }
                 catch { }
+
+                string err = ex.ToString();
+                if (err.Contains("DFR Display Device not found"))
+                {
+                    try
+                    {
+                        MessageBox(IntPtr.Zero,
+                            "Apple Touch Bar Display hardware device was not found!\n\n" +
+                            "Please complete the initial setup on your MacBook Pro:\n" +
+                            "1. Secure Boot must be turned OFF (macOS Recovery -> Startup Security Utility -> No Security)\n" +
+                            "2. Windows Test Mode must be ON: open CMD as Administrator, run 'bcdedit -set TESTSIGNING ON', and REBOOT\n" +
+                            "3. Run 'Install_Driver.bat' as Administrator to register the driver and certificate\n\n" +
+                            "If the issue persists, run 'Restart_TouchBar.bat' to reset the USB controller.",
+                            "Touch Bar for Windows — Driver Setup Required",
+                            0x00000010 /* MB_ICONERROR */);
+                    }
+                    catch { }
+                }
+
                 throw;
             }
         }

@@ -140,40 +140,76 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 ## Installation
 
-### Step 1: Prepare Windows & Driver
+> [!IMPORTANT]
+> **MacBook Pro 2018–2020 (Apple T2 Chip) Notice:**
+> Apple T2 machines require two prerequisite steps before third-party kernel drivers can run in Windows Boot Camp: disabling Apple Secure Boot in macOS Recovery, and enabling Windows Test Signing. Follow the steps below carefully.
 
-> [!TIP]
-> **Driver Already Included:** The `DFRDisplayKm` driver is already bundled inside the release archive (`TouchBar-Windows-v1.0.0-win64.zip`) in the `Driver/` folder! You do **not** need to download it separately.
+### Step 1: Prerequisites (One-Time Setup)
 
-1. **Turn off Secure Boot:**
-   * Restart your Mac and hold `Cmd + R` to enter **macOS Recovery**.
+1. **Turn off Apple Secure Boot:**
+   * Restart your Mac and hold `Cmd + R` until the Apple logo appears to enter **macOS Recovery**.
    * In the top menu bar, open **Utilities** $\rightarrow$ **Startup Security Utility**.
-   * Set **Secure Boot** to **No Security** (required to load third-party kernel drivers in Windows Boot Camp).
-   * Restart back into Windows.
+   * Enter your macOS administrator password.
+   * Under **Secure Boot**, select **No Security**.
+   * Under **Allowed Boot Media**, ensure **Allow booting from external or removable media** is selected.
+   * Click the Apple logo $\rightarrow$ Restart $\rightarrow$ Boot into **Windows**.
 
-2. **Enable Windows Test Mode:**
-   * Open **Command Prompt (CMD)** with administrative privileges (Right-click $\rightarrow$ Run as administrator).
-   * Type:
+2. **Enable Windows Test Mode (Test Signing):**
+   * In Windows, open **Command Prompt (cmd.exe)** as **Administrator** (Right-click $\rightarrow$ Run as administrator).
+   * Run the command:
      ```cmd
      bcdedit -set TESTSIGNING ON
      ```
-   * Reboot your computer.
-   * *(Note: If you ever want to turn off test mode later, run: `bcdedit -set TESTSIGNING OFF` and reboot).*
-
-3. **Install DFRDisplayKm Driver:**
-   * **Included in Release:** Simply open the extracted release folder $\rightarrow$ `Driver/`, right-click `DFRDisplayKm.inf`, and select **Install**.
-   * *(Optional / Alternative download: [Naozumi520/DFRDisplayKm Releases](https://github.com/Naozumi520/DFRDisplayKm/releases)).*
-   * Check **Device Manager**: under **System devices** or **Universal Serial Bus devices**, verify that `Apple Touch Bar Display` is working properly.
+   * **Reboot your computer.**
+   * *(After rebooting, a small "Test Mode" watermark will appear in the bottom-right corner of the Windows desktop. If you ever want to turn off test mode, run `bcdedit -set TESTSIGNING OFF` and reboot).*
 
 ---
 
-### Step 2: Quick Start
+### Step 2: Driver & Software Installation
 
-1. Download the latest release **`TouchBar-Windows-v1.0.0-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
-2. Extract the archive into a permanent folder (e.g., `C:\Program Files\TouchBar` or any folder on your drive).
-3. Right-click **`Add_to_Startup.bat`** and select **Run as administrator** (or run `Start_TouchBar.bat` / `TouchBar.exe` directly).
+> [!TIP]
+> **Driver & Certificate are bundled in the release:** The `DFRDisplayKm` driver and its security certificate are already included in the release archive in the `Driver/` folder! You do **not** need to download them separately.
+
+1. **Download & Extract Release:**
+   * Download the latest **`TouchBar-Windows-v1.0.0-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
+   * Extract the ZIP archive into a permanent folder (e.g. `C:\Program Files\TouchBar` or anywhere on your SSD).
+
+2. **Run Driver Installer (Automated 1-Click):**
+   * Right-click **`Install_Driver.bat`** and select **Run as administrator**.
+   * What this script does automatically:
+     - Imports `DFRDisplayKm.cer` into Windows **Trusted Root Certification Authorities** and **Trusted Publishers** (eliminates Code 52 unsigned driver errors on 64-bit Windows).
+     - Installs `DFRDisplayKm.inf` into the Windows DriverStore via PnPUtil.
+     - Starts and sets `DFRDisplayKm` and `SensrSvc` services to automatic startup.
+     - Refreshes the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) to immediately switch to configuration 1 (Touch Bar Display mode).
+   * Verify: You should see `SUCCESS! Apple Touch Bar Display is active and ready!` in green.
+
+3. **Launch Touch Bar:**
+   * Double-click **`Start_TouchBar.bat`** (or `TouchBar.exe`).
+   * The Touch Bar will instantly light up at 60 FPS with media controls, clock, battery, dynamic app switcher dock, CPU temperature, and companion pet!
+
+4. **Enable Autostart on Logon:**
+   * Right-click **`Add_to_Startup.bat`** and select **Run as administrator**.
    * This registers the silent Windows Task Scheduler task `TouchBarAutoStart` with highest privileges, enabling autostart on user logon even when running on battery without any UAC prompts.
-4. Launch **`TouchBar_Settings.bat`** (or `TouchBarSettings.exe`) to configure widgets, choose your companion pet, and customize appearance.
+
+5. **Customize via Control Center:**
+   * Launch **`TouchBar_Settings.bat`** (or click the tray icon $\rightarrow$ **⚙ Touch Bar Settings**) to customize widgets, change companion skins, and adjust brightness.
+
+---
+
+### Troubleshooting (MacBook Pro 2018 / T2)
+
+* **Touch Bar stays black / nothing appears:**
+  1. Open **Device Manager** (`devmgmt.msc`).
+  2. Look under **Universal Serial Bus devices** or **System devices** for **Apple Touch Bar Display** (or `iBridge Display Device`).
+  3. **Yellow exclamation mark (Code 52):** Windows Test Mode is not enabled or the certificate was not imported. Make sure you ran `bcdedit -set TESTSIGNING ON`, rebooted, and ran `Install_Driver.bat` as Administrator.
+  4. **Device not listed at all:** Right-click **`Restart_TouchBar.bat`** $\rightarrow$ **Run as administrator**. This triggers `Fix_TouchBar.ps1` to pulse the Apple T2 iBridge USB composition device and re-bind the display interface.
+  5. Check `crash.txt` in the program folder for detailed diagnostic logs.
+
+* **Settings window takes long to open:**
+  - Resolved: Settings window now queries system state asynchronously and loads in milliseconds. Use `TouchBar_Settings.bat` or double-click the system tray icon.
+
+* **CPU Temperature shows as blank or dashes:**
+  - Resolved: Temperature now updates immediately upon startup. For optimal accuracy and zero CPU overhead on T2 Macs, keep **[WMF-Control-T2-Edition](https://github.com/Gleb200/WMF-Control-T2-Edition)** running in the background.
 
 ---
 
@@ -211,8 +247,10 @@ Build outputs will be generated in:
 │   ├── Models/               # AppConfig, ConfigManager
 │   ├── ViewModels/           # MainViewModel, Telemetry, Companion, SMTC
 │   └── pets/                 # Sprite sheets for 10 companion characters
+├── Driver/                   # DFRDisplayKm kernel driver & test certificate
 ├── TouchBarSettings/         # Fluent Dark Windows 11 WPF settings application
 ├── TouchBar/                 # Elevated silent application launcher
+├── Install_Driver.bat        # 1-click driver & certificate installer (Admin)
 ├── Add_to_Startup.bat        # Configures Task Scheduler autostart on logon
 ├── Remove_from_Startup.bat   # Unregisters Task Scheduler autostart
 ├── Start_TouchBar.bat        # Launches the Touch Bar host

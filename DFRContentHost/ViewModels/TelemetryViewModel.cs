@@ -126,6 +126,9 @@ namespace DFRContentHost.ViewModels
             };
             _timer.Tick += (s, e) => UpdateMetricsAsync();
             _timer.Start();
+
+            // Trigger immediate background update on startup so temperature and battery status are available immediately
+            UpdateMetricsAsync();
         }
 
         private void UpdateMetricsSync()

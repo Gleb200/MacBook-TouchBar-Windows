@@ -83,8 +83,15 @@ namespace TouchBarSettings
 
             ChkShowFnKeys.IsChecked = _config.ShowFnKeysOnFnPress;
 
-            // AutoStart
-            ChkAutoStart.IsChecked = AutoStartHelper.IsAutoStartEnabled();
+            // AutoStart (queried in background to ensure instant zero-latency UI display)
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                bool enabled = AutoStartHelper.IsAutoStartEnabled();
+                Dispatcher.Invoke(() =>
+                {
+                    ChkAutoStart.IsChecked = enabled;
+                });
+            });
 
             // 2. Pets & Custom Characters
             ChkPetEnabled.IsChecked = _config.PetEnabled;

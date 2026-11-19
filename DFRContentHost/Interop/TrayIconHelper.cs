@@ -86,6 +86,9 @@ namespace DFRContentHost.Interop
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
         private static extern IntPtr CreatePopupMenu();
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -205,6 +208,8 @@ namespace DFRContentHost.Interop
             catch { }
         }
 
+        private static DateTime _lastOpenConfigTime = DateTime.MinValue;
+
         private static IntPtr CustomWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
             if (msg == WM_TRAYICON)
@@ -212,7 +217,11 @@ namespace DFRContentHost.Interop
                 int eventType = (int)lParam;
                 if (eventType == WM_LBUTTONUP || eventType == WM_LBUTTONDBLCLK)
                 {
-                    OpenConfigurator();
+                    if ((DateTime.UtcNow - _lastOpenConfigTime).TotalMilliseconds >= 800)
+                    {
+                        _lastOpenConfigTime = DateTime.UtcNow;
+                        OpenConfigurator();
+                    }
                 }
                 else if (eventType == WM_RBUTTONUP)
                 {
@@ -270,6 +279,7 @@ namespace DFRContentHost.Interop
                         var handle = existing[0].MainWindowHandle;
                         if (handle != IntPtr.Zero)
                         {
+                            ShowWindow(handle, 9 /* SW_RESTORE */);
                             SetForegroundWindow(handle);
                             return;
                         }
@@ -278,39 +288,59 @@ namespace DFRContentHost.Interop
                 }
 
                 string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string exePath = Path.Combine(baseDir, "TouchBarSettings.exe");
+                string rootDir = Directory.Exists(Path.Combine(baseDir, "dotnet"))
+                    ? baseDir
+                    : (Directory.GetParent(baseDir) != null ? Directory.GetParent(baseDir).FullName : baseDir);
 
-                // Check multiple possible locations
-                if (!File.Exists(exePath))
+                string dotnetDir = Path.Combine(rootDir, "dotnet");
+                string settingsExe = Path.Combine(rootDir, "TouchBarSettings.exe");
+
+                if (!File.Exists(settingsExe))
                 {
-                    exePath = Path.Combine(baseDir, "..", "TouchBarSettings.exe");
+                    settingsExe = Path.Combine(baseDir, "TouchBarSettings.exe");
                 }
-                if (!File.Exists(exePath))
+                if (!File.Exists(settingsExe))
                 {
-                    exePath = Path.Combine(Directory.GetCurrentDirectory(), "TouchBarSettings.exe");
+                    settingsExe = Path.Combine(Directory.GetCurrentDirectory(), "TouchBarSettings.exe");
                 }
 
-                if (File.Exists(exePath))
+                if (File.Exists(settingsExe))
                 {
-                    var psi = new ProcessStartInfo(exePath)
+                    var psi = new ProcessStartInfo(settingsExe)
                     {
-                        WorkingDirectory = Path.GetDirectoryName(exePath),
-                        UseShellExecute = true
+                        WorkingDirectory = Path.GetDirectoryName(settingsExe),
+                        UseShellExecute = false
                     };
+                    if (Directory.Exists(dotnetDir))
+                    {
+                        psi.EnvironmentVariables["DOTNET_ROOT"] = dotnetDir;
+                        string curPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+                        if (!curPath.Contains(dotnetDir))
+                        {
+                            psi.EnvironmentVariables["PATH"] = dotnetDir + ";" + curPath;
+                        }
+                    }
                     Process.Start(psi);
                 }
                 else
                 {
-                    // Fallback: run via dotnet if DLL exists
-                    string dllPath = Path.Combine(baseDir, "TouchBarSettings.dll");
+                    // Fallback: run via bundled dotnet if DLL exists
+                    string dotnetExe = Path.Combine(dotnetDir, "dotnet.exe");
+                    string dllPath = Path.Combine(rootDir, "TouchBarSettings.dll");
+                    if (!File.Exists(dllPath)) dllPath = Path.Combine(baseDir, "TouchBarSettings.dll");
+
                     if (File.Exists(dllPath))
                     {
-                        var psi = new ProcessStartInfo("dotnet", $"\"{dllPath}\"")
+                        var psi = new ProcessStartInfo(File.Exists(dotnetExe) ? dotnetExe : "dotnet", $"\"{dllPath}\"")
                         {
                             WorkingDirectory = Path.GetDirectoryName(dllPath),
                             UseShellExecute = false,
                             CreateNoWindow = true
                         };
+                        if (Directory.Exists(dotnetDir))
+                        {
+                            psi.EnvironmentVariables["DOTNET_ROOT"] = dotnetDir;
+                        }
                         Process.Start(psi);
                     }
                 }
@@ -323,7 +353,15 @@ namespace DFRContentHost.Interop
             try
             {
                 string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string restartBat = Path.Combine(baseDir, "..", "Перезапустить_TouchBar.bat");
+                string rootDir = Directory.Exists(Path.Combine(baseDir, "dotnet"))
+                    ? baseDir
+                    : (Directory.GetParent(baseDir) != null ? Directory.GetParent(baseDir).FullName : baseDir);
+
+                string restartBat = Path.Combine(rootDir, "Restart_TouchBar.bat");
+                if (!File.Exists(restartBat))
+                {
+                    restartBat = Path.Combine(baseDir, "..", "Restart_TouchBar.bat");
+                }
                 if (File.Exists(restartBat))
                 {
                     Process.Start(new ProcessStartInfo(restartBat) { UseShellExecute = true });

@@ -661,6 +661,10 @@ namespace DFRContentHost.ViewModels
             Companion = new CompanionViewModel(SmtcViewModel);
             RunningApps = new ObservableCollection<AppWindowInfo>();
             Telemetry = new TelemetryViewModel();
+            Telemetry.WhenAnyValue(x => x.IsCpuTempAvailable)
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(ShowCpuTempWidget)));
+            Telemetry.WhenAnyValue(x => x.IsBatteryPresent)
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(ShowBatteryWidget)));
             InitScrollAnimation();
 
             SmtcViewModel.WhenAnyValue(x => x.IsSmtcActive)
