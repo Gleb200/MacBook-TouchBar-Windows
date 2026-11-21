@@ -213,6 +213,17 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 ---
 
+## Uninstallation
+
+To cleanly and completely remove Touch Bar, its autostart entry, and the kernel driver from Windows:
+1. Open the application folder.
+2. Right-click **`Uninstall_TouchBar.bat`** and select **Run as administrator**.
+   * Automatically stops running processes, deletes the Task Scheduler autostart task, uninstalls the `DFRDisplayKm` driver from Windows Driver Store, removes installed certificates, and resets the Apple T2 iBridge controller back to default hardware function keys.
+3. Delete the application folder.
+4. *(Optional)* To disable Windows Test Mode, run `bcdedit -set TESTSIGNING OFF` in an Administrator Command Prompt and reboot.
+
+---
+
 ## Building from Source
 
 ### Prerequisites
