@@ -16,14 +16,19 @@ if (-not $isAdmin) {
     exit 1
 }
 
-Write-Host "[1/6] Stopping Touch Bar processes..." -ForegroundColor Yellow
-$procNames = @("TouchBar", "DFRContentHost", "TouchBarSettings")
+Write-Host "[1/6] Stopping Touch Bar and dotnet host processes..." -ForegroundColor Yellow
+$procNames = @("TouchBar", "TouchBarSettings", "DFRContentHost", "dotnet")
 foreach ($name in $procNames) {
     Get-Process -Name $name -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Host "  Stopping $($_.ProcessName) (PID $($_.Id))..."
         Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
     }
 }
+cmd.exe /c "taskkill /f /t /im TouchBar.exe >nul 2>&1"
+cmd.exe /c "taskkill /f /t /im TouchBarSettings.exe >nul 2>&1"
+cmd.exe /c "taskkill /f /t /im DFRContentHost.exe >nul 2>&1"
+cmd.exe /c "taskkill /f /t /im dotnet.exe >nul 2>&1"
+Start-Sleep -Milliseconds 500
 Write-Host "  Processes stopped [OK]." -ForegroundColor Green
 
 Write-Host "`n[2/6] Removing Windows Task Scheduler Autostart task..." -ForegroundColor Yellow
@@ -50,10 +55,10 @@ Write-Host "`n[3/6] Stopping and removing DFRDisplayKm driver service..." -Foreg
 $svc = Get-Service -Name "DFRDisplayKm" -ErrorAction SilentlyContinue
 if ($svc) {
     Write-Host "  Stopping service DFRDisplayKm..."
-    sc.exe stop DFRDisplayKm | Out-Null
+    sc.exe stop DFRDisplayKm
     Start-Sleep -Seconds 1
     Write-Host "  Deleting service DFRDisplayKm..."
-    sc.exe delete DFRDisplayKm | Out-Null
+    sc.exe delete DFRDisplayKm
     Write-Host "  DFRDisplayKm service removed [OK]." -ForegroundColor Green
 } else {
     Write-Host "  DFRDisplayKm service not found (already removed) [OK]." -ForegroundColor Green
@@ -68,7 +73,7 @@ for ($i = 0; $i -lt $driverList.Count; $i++) {
             if ($driverList[$j] -match "(oem\d+\.inf)") {
                 $oemName = $matches[1]
                 Write-Host "  Found driver package: $oemName. Deleting and uninstalling..."
-                pnputil /delete-driver $oemName /uninstall /force | Out-Null
+                pnputil /delete-driver $oemName /uninstall /force
                 $oemFound = $true
                 Write-Host "  Driver package $oemName deleted [OK]." -ForegroundColor Green
                 break
@@ -103,7 +108,7 @@ $bridgeDevices = Get-PnpDevice | Where-Object {
 foreach ($dev in $bridgeDevices) {
     Write-Host "  Restarting device $($dev.FriendlyName) ($($dev.InstanceId))..."
     Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 400
+    Start-Sleep -Milliseconds 500
     Enable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction SilentlyContinue
 }
 Write-Host "  Apple iBridge device refreshed [OK]." -ForegroundColor Green
@@ -113,4 +118,3 @@ Write-Host "  Touch Bar and its driver have been COMPLETELY uninstalled!   " -Fo
 Write-Host "  Your system is clean and ready for a fresh installation.    " -ForegroundColor Cyan
 Write-Host "==============================================================" -ForegroundColor Cyan
 Write-Host ""
-pause
