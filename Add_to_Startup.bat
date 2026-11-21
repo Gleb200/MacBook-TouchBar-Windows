@@ -1,11 +1,20 @@
 @echo off
 title Touch Bar Autostart Setup
+chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ==============================================================
 echo  Configuring Touch Bar Autostart on Windows Logon...
 echo ==============================================================
 echo.
+
+:: Check for Administrator privileges
+net session >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [!] Administrator privileges required. Requesting UAC elevation...
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process cmd.exe -ArgumentList '/c', 'call', '\"%~f0\"' -Verb RunAs"
+    exit /b
+)
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$exe = Join-Path '%~dp0' 'TouchBar.exe';" ^
