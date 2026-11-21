@@ -1,7 +1,7 @@
 ﻿# Touch Bar for Windows (MacBook Pro Edition)
 
 <p align="center">
-  <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.0-blue.svg" alt="Release" /></a>
+  <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.1-blue.svg" alt="Release" /></a>
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-informational.svg" alt="Platform: Windows 10 | 11 (x64)" />
   <img src="https://img.shields.io/badge/.NET-Core%203.0%20%2F%203.1-purple.svg" alt=".NET Core 3.0 / 3.1" />
@@ -171,7 +171,7 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 > **Driver & Certificate are bundled in the release:** The `DFRDisplayKm` driver and its security certificate are already included in the release archive in the `Driver/` folder! You do **not** need to download them separately.
 
 1. **Download & Extract Release:**
-   * Download the latest **`TouchBar-Windows-v1.0.0-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
+   * Download the latest **`TouchBar-Windows-v1.0.1-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
    * Extract the ZIP archive into a permanent folder (e.g. `C:\Program Files\TouchBar` or anywhere on your SSD).
 
 2. **Run Driver Installer (Automated 1-Click):**
