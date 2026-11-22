@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -13,12 +14,17 @@ namespace TouchBarSettings
     {
         private AppConfig _config;
         private bool _isInitializing = true;
+        private System.Windows.Forms.NotifyIcon _notifyIcon;
+        private System.Windows.Forms.ContextMenuStrip _trayMenu;
+        private bool _isRealExit = false;
+        private bool _hasShownBalloon = false;
         public ObservableCollection<WidgetConfigItem> WidgetsList { get; } = new ObservableCollection<WidgetConfigItem>();
 
         public MainWindow()
         {
             InitializeComponent();
             LstWidgets.ItemsSource = WidgetsList;
+            SetupSystemTray();
             Loaded += MainWindow_Loaded;
         }
 
@@ -26,6 +32,20 @@ namespace TouchBarSettings
         {
             LoadConfigToUI();
             _isInitializing = false;
+
+            // Start Touch Bar hardware display host immediately
+            TouchBarEngine.StartHost();
+
+            // If launched with --tray or -minimized or --autostart, start directly in tray
+            string[] args = Environment.GetCommandLineArgs();
+            if (args != null && args.Any(a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase) ||
+                                             string.Equals(a, "-tray", StringComparison.OrdinalIgnoreCase) ||
+                                             string.Equals(a, "/tray", StringComparison.OrdinalIgnoreCase) ||
+                                             string.Equals(a, "--autostart", StringComparison.OrdinalIgnoreCase) ||
+                                             string.Equals(a, "-minimized", StringComparison.OrdinalIgnoreCase)))
+            {
+                Hide();
+            }
         }
 
         private void LoadConfigToUI()
@@ -89,7 +109,8 @@ namespace TouchBarSettings
                 bool enabled = AutoStartHelper.IsAutoStartEnabled();
                 Dispatcher.Invoke(() =>
                 {
-                    ChkAutoStart.IsChecked = enabled;
+                    UpdateAutoStartUI(enabled);
+                    UpdateTrayMenu();
                 });
             });
 
@@ -207,10 +228,15 @@ namespace TouchBarSettings
             ChkOverlayUac.Content = I18n.Get("OverlayUac", lang);
             ChkOverlayCharging.Content = I18n.Get("OverlayCharging", lang);
 
-            // Bottom bar
+            // Bottom bar & Tray
             TxtSavedAutoNote.Text = I18n.Get("SavedAutoNote", lang);
             BtnResetDefaults.Content = I18n.Get("BtnResetDefaults", lang);
             BtnApply.Content = I18n.Get("BtnApply", lang);
+            BtnHideToTray.Content = I18n.Get("BtnHideToTray", lang);
+            BtnHeaderTray.Content = I18n.Get("BtnHideToTray", lang);
+
+            UpdateAutoStartUI(AutoStartHelper.IsAutoStartEnabled());
+            UpdateTrayMenu();
 
             // Refresh widget names in list
             foreach (var widget in WidgetsList)
@@ -338,6 +364,8 @@ namespace TouchBarSettings
                 AutoStartHelper.SetAutoStart(enabled);
                 _config.AutoStartWithWindows = enabled;
                 SaveConfigFromUI();
+                UpdateAutoStartUI(enabled);
+                UpdateTrayMenu();
             }
         }
 
@@ -533,6 +561,189 @@ namespace TouchBarSettings
             }
             catch { }
         }
+
+        #region System Tray & AutoStart
+
+        private void SetupSystemTray()
+        {
+            try
+            {
+                _notifyIcon = new System.Windows.Forms.NotifyIcon();
+
+                string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(icoPath))
+                {
+                    _notifyIcon.Icon = new System.Drawing.Icon(icoPath);
+                }
+                else
+                {
+                    _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                }
+
+                _notifyIcon.Text = "MacBook Touch Bar";
+                _notifyIcon.Visible = true;
+
+                _trayMenu = new System.Windows.Forms.ContextMenuStrip();
+                _notifyIcon.ContextMenuStrip = _trayMenu;
+                _notifyIcon.DoubleClick += (s, e) => ShowAndRestoreWindow();
+                _notifyIcon.MouseClick += (s, e) =>
+                {
+                    if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                    {
+                        ShowAndRestoreWindow();
+                    }
+                };
+            }
+            catch { }
+        }
+
+        private void UpdateTrayMenu()
+        {
+            if (_trayMenu == null) return;
+            try
+            {
+                _trayMenu.Items.Clear();
+
+                string lang = _config?.GetEffectiveLanguage() ?? "ru";
+                bool autoStart = AutoStartHelper.IsAutoStartEnabled();
+
+                var itemShow = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayOpen", lang), null, (s, e) => ShowAndRestoreWindow());
+                itemShow.Font = new System.Drawing.Font(itemShow.Font, System.Drawing.FontStyle.Bold);
+                _trayMenu.Items.Add(itemShow);
+
+                string stateText = autoStart ? I18n.Get("AutoStartOn", lang) : I18n.Get("AutoStartOff", lang);
+                string autoText = string.Format(I18n.Get("TrayAutoStart", lang), stateText);
+                var itemAuto = new System.Windows.Forms.ToolStripMenuItem(autoText, null, (s, e) => ToggleAutoStart());
+                itemAuto.Checked = autoStart;
+                _trayMenu.Items.Add(itemAuto);
+
+                var itemRestart = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayRestart", lang), null, (s, e) => RestartTouchBar());
+                _trayMenu.Items.Add(itemRestart);
+
+                _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+
+                var itemExit = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayExit", lang), null, (s, e) =>
+                {
+                    _isRealExit = true;
+                    Close();
+                });
+                _trayMenu.Items.Add(itemExit);
+            }
+            catch { }
+        }
+
+        public void ShowAndRestoreWindow()
+        {
+            Show();
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowState = WindowState.Normal;
+            }
+            Activate();
+            Focus();
+        }
+
+        private void RestartTouchBar()
+        {
+            TouchBarEngine.RestartHost();
+        }
+
+        protected override void OnStateChanged(EventArgs e)
+        {
+            base.OnStateChanged(e);
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+            }
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            if (!_isRealExit)
+            {
+                e.Cancel = true;
+                Hide();
+                if (!_hasShownBalloon)
+                {
+                    _hasShownBalloon = true;
+                    string lang = _config?.GetEffectiveLanguage() ?? "ru";
+                    _notifyIcon?.ShowBalloonTip(2000, I18n.Get("TrayBalloonTitle", lang), I18n.Get("TrayBalloonText", lang), System.Windows.Forms.ToolTipIcon.Info);
+                }
+                return;
+            }
+
+            try
+            {
+                TouchBarEngine.StopHost();
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.Visible = false;
+                    _notifyIcon.Dispose();
+                    _notifyIcon = null;
+                }
+            }
+            catch { }
+
+            base.OnClosing(e);
+        }
+
+        private void OnHideToTrayClicked(object sender, RoutedEventArgs e)
+        {
+            Hide();
+            if (!_hasShownBalloon)
+            {
+                _hasShownBalloon = true;
+                string lang = _config?.GetEffectiveLanguage() ?? "ru";
+                _notifyIcon?.ShowBalloonTip(2000, I18n.Get("TrayBalloonTitle", lang), I18n.Get("TrayBalloonText", lang), System.Windows.Forms.ToolTipIcon.Info);
+            }
+        }
+
+        private void OnBtnToggleAutoStartQuickClicked(object sender, RoutedEventArgs e)
+        {
+            ToggleAutoStart();
+        }
+
+        private void OnBtnToggleAutoStartLargeClicked(object sender, RoutedEventArgs e)
+        {
+            ToggleAutoStart();
+        }
+
+        private void ToggleAutoStart()
+        {
+            bool currentlyEnabled = AutoStartHelper.IsAutoStartEnabled();
+            bool newState = !currentlyEnabled;
+            AutoStartHelper.SetAutoStart(newState);
+            _config.AutoStartWithWindows = newState;
+            ConfigRepository.Save(_config);
+
+            UpdateAutoStartUI(newState);
+            UpdateTrayMenu();
+        }
+
+        private void UpdateAutoStartUI(bool enabled)
+        {
+            string lang = _config?.GetEffectiveLanguage() ?? "ru";
+            string stateText = enabled ? I18n.Get("AutoStartOn", lang) : I18n.Get("AutoStartOff", lang);
+
+            ChkAutoStart.IsChecked = enabled;
+
+            if (BtnAutoStartQuick != null)
+            {
+                BtnAutoStartQuick.Content = string.Format(I18n.Get("BtnAutoStartQuick", lang), stateText);
+                BtnAutoStartQuick.Foreground = enabled
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 209, 88))
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170));
+            }
+
+            if (BtnToggleAutoStartLarge != null)
+            {
+                BtnToggleAutoStartLarge.Content = enabled
+                    ? I18n.Get("BtnAutoStartDisable", lang)
+                    : I18n.Get("BtnAutoStartEnable", lang);
+            }
+        }
+
+        #endregion
 
         private void OnApplyClicked(object sender, RoutedEventArgs e)
         {

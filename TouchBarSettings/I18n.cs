@@ -67,10 +67,22 @@ namespace TouchBarSettings
             { "OverlayUac", ("Кнопки подтверждения UAC и системных диалогов администратора", "UAC and Administrator elevation confirmation buttons") },
             { "OverlayCharging", ("Баннер и анимация подключения зарядного устройства (MagSafe / Type-C)", "MagSafe / Type-C charger connect banner and animation") },
 
-            // Bottom bar
+            // Bottom bar & Tray
             { "SavedAutoNote", ("Изменения сохраняются в config.json и применяются на лету", "Changes are saved to config.json and applied instantly") },
             { "BtnResetDefaults", ("Сбросить по умолчанию", "Reset to Defaults") },
             { "BtnApply", ("Сохранить и применить", "Save & Apply") },
+            { "BtnHideToTray", ("📥 Скрыть в трей", "📥 Hide to Tray") },
+            { "BtnAutoStartQuick", ("🚀 Автозапуск: {0}", "🚀 Autostart: {0}") },
+            { "BtnAutoStartEnable", ("🚀 Включить автозапуск", "🚀 Enable Autostart") },
+            { "BtnAutoStartDisable", ("⏹ Отключить автозапуск", "⏹ Disable Autostart") },
+            { "AutoStartOn", ("Вкл", "On") },
+            { "AutoStartOff", ("Выкл", "Off") },
+            { "TrayBalloonTitle", ("Touch Bar Control Center", "Touch Bar Control Center") },
+            { "TrayBalloonText", ("Панель свёрнута в системный трей. Кликните дважды, чтобы открыть.", "Control Center minimized to system tray. Double-click to open.") },
+            { "TrayOpen", ("🖥 Открыть панель управления", "🖥 Open Control Center") },
+            { "TrayRestart", ("🔄 Перезапустить Touch Bar", "🔄 Restart Touch Bar") },
+            { "TrayAutoStart", ("🚀 Автозапуск: {0}", "🚀 Autostart: {0}") },
+            { "TrayExit", ("❌ Выход", "❌ Exit") },
 
             // Dialogs
             { "AppliedTitle", ("Применено", "Applied") },

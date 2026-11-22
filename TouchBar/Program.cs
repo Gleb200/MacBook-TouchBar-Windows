@@ -8,7 +8,7 @@ namespace TouchBarLauncher
     static class Program
     {
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             try
             {
@@ -19,8 +19,11 @@ namespace TouchBarLauncher
 
                 string dotnetDir = Path.Combine(rootDir, "dotnet");
                 string dotnetPath = Path.Combine(dotnetDir, "dotnet.exe");
-                string appDll = Path.Combine(rootDir, "HostApp_v2", "DFRContentHost.dll");
-                string workDir = Path.Combine(rootDir, "HostApp_v2");
+                string settingsDll = Path.Combine(rootDir, "TouchBarSettings.dll");
+                string hostDll = Path.Combine(rootDir, "HostApp_v2", "DFRContentHost.dll");
+
+                string appDll = File.Exists(settingsDll) ? settingsDll : hostDll;
+                string workDir = File.Exists(settingsDll) ? rootDir : Path.Combine(rootDir, "HostApp_v2");
 
                 if (!File.Exists(dotnetPath) || !File.Exists(appDll))
                 {
@@ -38,10 +41,12 @@ namespace TouchBarLauncher
                 }
                 catch { }
 
+                string extraArgs = args != null && args.Length > 0 ? " " + string.Join(" ", args) : "";
+
                 var psi = new ProcessStartInfo
                 {
                     FileName = dotnetPath,
-                    Arguments = "\"" + appDll + "\"",
+                    Arguments = "\"" + appDll + "\"" + extraArgs,
                     WorkingDirectory = workDir,
                     WindowStyle = ProcessWindowStyle.Hidden
                 };

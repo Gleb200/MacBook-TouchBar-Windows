@@ -49,12 +49,18 @@ namespace DFRContentHost.Models
         private void InitializePath()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            _configFilePath = Path.Combine(baseDir, "config.json");
-
-            // Fallback to working directory if not writable
-            if (!Directory.Exists(baseDir))
+            string parentConfig = Path.Combine(baseDir, "..", "config.json");
+            if (File.Exists(parentConfig))
             {
-                _configFilePath = Path.Combine(Directory.GetCurrentDirectory(), "config.json");
+                _configFilePath = Path.GetFullPath(parentConfig);
+            }
+            else if (File.Exists(Path.Combine(baseDir, "config.json")))
+            {
+                _configFilePath = Path.Combine(baseDir, "config.json");
+            }
+            else
+            {
+                _configFilePath = Path.GetFullPath(parentConfig);
             }
         }
 

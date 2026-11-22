@@ -121,20 +121,44 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 * **Anti-Flicker Buffer:** Holds the last valid temperature for up to 3.5 seconds across transient bus misses.
 
 ### 8. MacBook Pro Hardware Integrations
-* **Virtual ESC Key:**
-  Essential left-aligned Escape key for 2016–2019 MacBook Pro models lacking a physical Escape key.
-* **Global Fn Row (F1–F12):**
-  Holding the physical `Fn` key on the MacBook keyboard flips the bar into standard F1–F12 keys.
+* **Edge-Aligned Virtual ESC Key:**
+  Essential Escape key repositioned to the far-left edge of the Touch Bar display for effortless, natural touch access on 2016–2019 MacBook Pro models lacking a physical Escape key.
+* **Full-Width Global Fn Row (F1–F12):**
+  Holding the physical `Fn` key on the MacBook keyboard flips the bar into standard F1–F12 keys, now stretched and evenly distributed across the entire display length for optimal finger reach.
 * **System Overlays:**
   * Windows Hello / Touch ID biometric prompt banner.
   * Administrator UAC elevation dialog confirm buttons.
   * MagSafe / USB-C charging connection banner.
 
-### 9. Fluent Windows 11 Settings Center (`TouchBarSettings.exe`)
-* Modern dark-themed WPF configuration utility.
-* Bilingual: full English and Russian localization.
-* Widget reordering and visibility toggles.
-* Live synchronization with `config.json` without requiring application restarts.
+### 9. Unified Single Application (`TouchBar.exe`)
+* **All-in-One Engine:**
+  A single unified executable that orchestrates the hardware display host (`DFRContentHost`), settings UI, and system tray integration.
+* **Windows System Tray Integration:**
+  * Discreet tray icon (`app.ico`) in the taskbar notification area.
+  * Left-click / double-click opens the Control Center / Settings window instantly.
+  * Right-click context menu: **🖥 Control Center**, **🚀 Toggle Autostart**, **🔄 Restart Touch Bar**, and **❌ Exit**.
+  * Closing (`[X]`) or minimizing the Settings window automatically docks to the tray, maintaining 60 FPS Touch Bar rendering in the background.
+* **In-App Autostart Management:**
+  Toggle Windows logon autostart directly with one switch inside the Settings window (or from the tray menu) without needing separate scripts.
+* **Fluent Windows 11 Settings Center:**
+  * Modern dark-themed WPF configuration utility with instantaneous asynchronous loading.
+  * Bilingual: full English and Russian localization.
+  * Widget reordering, pet selector, and visibility toggles.
+  * Live synchronization with `config.json` without requiring application restarts.
+
+### 10. Intelligent 1-Click Manager (`TouchBar.bat`)
+* **Automated Diagnostics & Setup:**
+  Replaces scattered installation scripts with one smart diagnostic utility. Running `TouchBar.bat` automatically inspects Windows Test Signing status, driver presence in the DriverStore, certificate trust, and Apple T2 iBridge USB controller state.
+* **Self-Healing Actions:**
+  Automatically identifies missing components or disabled devices and fixes them in one click.
+* **Quick CLI Commands:**
+  - `TouchBar.bat` (Interactive status check & automatic setup)
+  - `TouchBar.bat install` (Installs certificates and registers driver)
+  - `TouchBar.bat status` (Displays comprehensive diagnostic status)
+  - `TouchBar.bat fix` (Re-enumerates USB bus & restarts Touch Bar)
+  - `TouchBar.bat autostart` (Toggles Windows Task Scheduler autostart)
+  - `TouchBar.bat uninstall` (Clean uninstallation of driver, certs, and tasks)
+  - `TouchBar.bat start` (Launches `TouchBar.exe`)
 
 ---
 
@@ -168,45 +192,39 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 ### Step 2: Driver & Software Installation
 
 > [!TIP]
-> **Driver & Certificate are bundled in the release:** The `DFRDisplayKm` driver and its security certificate are already included in the release archive in the `Driver/` folder! You do **not** need to download them separately.
+> **Driver & Certificate are bundled in the release:** The `DFRDisplayKm` driver, its security certificate, and diagnostic tools are all bundled in the release archive in the `Driver/` folder! You do **not** need to download them separately.
 
 1. **Download & Extract Release:**
    * Download the latest **`TouchBar-Windows-v1.0.1-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
    * Extract the ZIP archive into a permanent folder (e.g. `C:\Program Files\TouchBar` or anywhere on your SSD).
 
-2. **Run Driver Installer (Automated 1-Click):**
-   * Right-click **`Install_Driver.bat`** and select **Run as administrator**.
-   * What this script does automatically:
-     - Imports `DFRDisplayKm.cer` into Windows **Trusted Root Certification Authorities** and **Trusted Publishers** (eliminates Code 52 unsigned driver errors on 64-bit Windows).
-     - Installs `DFRDisplayKm.inf` into the Windows DriverStore via PnPUtil.
-     - Starts and sets `DFRDisplayKm` and `SensrSvc` services to automatic startup.
-     - Refreshes the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) to immediately switch to configuration 1 (Touch Bar Display mode).
-   * Verify: You should see `SUCCESS! Apple Touch Bar Display is active and ready!` in green.
+2. **Run Intelligent Setup (Automated 1-Click):**
+   * Right-click **`TouchBar.bat`** and select **Run as administrator**.
+   * The script will automatically verify your system environment, import `DFRDisplayKm.cer` into Windows **Trusted Root** and **Trusted Publishers** (preventing Code 52 errors), register `DFRDisplayKm.inf` into the Windows DriverStore, and switch the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) into Touch Bar Display mode.
+   * If any step is missing or broken, it will offer to fix it automatically!
 
 3. **Launch Touch Bar:**
-   * Double-click **`Start_TouchBar.bat`** (or `TouchBar.exe`).
+   * Double-click **`TouchBar.exe`** (or run `TouchBar.bat start`).
    * The Touch Bar will instantly light up at 60 FPS with media controls, clock, battery, dynamic app switcher dock, CPU temperature, and companion pet!
+   * The program icon will appear in the Windows system tray.
 
 4. **Enable Autostart on Logon:**
-   * Right-click **`Add_to_Startup.bat`** and select **Run as administrator**.
-   * This registers the silent Windows Task Scheduler task `TouchBarAutoStart` with highest privileges, enabling autostart on user logon even when running on battery without any UAC prompts.
-
-5. **Customize via Control Center:**
-   * Launch **`TouchBar_Settings.bat`** (or click the tray icon $\rightarrow$ **⚙ Touch Bar Settings**) to customize widgets, change companion skins, and adjust brightness.
+   * Open the Settings window (double-click the tray icon or launch `TouchBar.exe`).
+   * Switch the **🚀 Автозапуск при входе в систему (Autostart on logon)** toggle to **ON** (or right-click the tray icon $\rightarrow$ **🚀 Автозапуск: Вкл**).
+   * This registers the silent Windows Task Scheduler task `TouchBarAutoStart` with highest privileges, launching silently in the system tray (`--tray`) on user login without UAC prompts.
 
 ---
 
 ### Troubleshooting (MacBook Pro 2018 / T2)
 
 * **Touch Bar stays black / nothing appears:**
-  1. Open **Device Manager** (`devmgmt.msc`).
-  2. Look under **Universal Serial Bus devices** or **System devices** for **Apple Touch Bar Display** (or `iBridge Display Device`).
-  3. **Yellow exclamation mark (Code 52):** Windows Test Mode is not enabled or the certificate was not imported. Make sure you ran `bcdedit -set TESTSIGNING ON`, rebooted, and ran `Install_Driver.bat` as Administrator.
-  4. **Device not listed at all:** Right-click **`Restart_TouchBar.bat`** $\rightarrow$ **Run as administrator**. This triggers `Fix_TouchBar.ps1` to pulse the Apple T2 iBridge USB composition device and re-bind the display interface.
-  5. Check `crash.txt` in the program folder for detailed diagnostic logs.
+  1. Right-click **`TouchBar.bat`** $\rightarrow$ **Run as administrator** (or run `TouchBar.bat fix`).
+  2. The script diagnoses driver health and resets the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) to re-bind the framebuffer interface.
+  3. **Yellow exclamation mark (Code 52) in Device Manager:** Windows Test Mode is not enabled or the certificate was not imported. Make sure you ran `bcdedit -set TESTSIGNING ON`, rebooted, and ran `TouchBar.bat install` as Administrator.
+  4. Check `crash.txt` in the program folder for detailed diagnostic logs.
 
 * **Settings window takes long to open:**
-  - Resolved: Settings window now queries system state asynchronously and loads in milliseconds. Use `TouchBar_Settings.bat` or double-click the system tray icon.
+  - Resolved: Settings queries system state asynchronously and opens instantly in milliseconds. Double-click the system tray icon to view or click **📥 Скрыть в трей** to minimize.
 
 * **CPU Temperature shows as blank or dashes:**
   - Resolved: Temperature now updates immediately upon startup. For optimal accuracy and zero CPU overhead on T2 Macs, keep **[WMF-Control-T2-Edition](https://github.com/Gleb200/WMF-Control-T2-Edition)** running in the background.
@@ -217,8 +235,8 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 
 To cleanly and completely remove Touch Bar, its autostart entry, and the kernel driver from Windows:
 1. Open the application folder.
-2. Right-click **`Uninstall_TouchBar.bat`** and select **Run as administrator**.
-   * Automatically stops running processes, deletes the Task Scheduler autostart task, uninstalls the `DFRDisplayKm` driver from Windows Driver Store, removes installed certificates, and resets the Apple T2 iBridge controller back to default hardware function keys.
+2. Right-click **`TouchBar.bat`** $\rightarrow$ **Run as administrator** and choose **Uninstall** (or run `TouchBar.bat uninstall` from an elevated prompt).
+   * Automatically terminates all active Touch Bar processes, deletes the Task Scheduler autostart task, uninstalls the `DFRDisplayKm` driver from the Windows Driver Store, removes installed certificates, and resets the Apple T2 iBridge controller back to default hardware function keys.
 3. Delete the application folder.
 4. *(Optional)* To disable Windows Test Mode, run `bcdedit -set TESTSIGNING OFF` in an Administrator Command Prompt and reboot.
 
@@ -258,15 +276,11 @@ Build outputs will be generated in:
 │   ├── Models/               # AppConfig, ConfigManager
 │   ├── ViewModels/           # MainViewModel, Telemetry, Companion, SMTC
 │   └── pets/                 # Sprite sheets for 10 companion characters
-├── Driver/                   # DFRDisplayKm kernel driver & test certificate
-├── TouchBarSettings/         # Fluent Dark Windows 11 WPF settings application
+├── Driver/                   # DFRDisplayKm kernel driver, certificate & Manager.ps1
+├── TouchBarSettings/         # Fluent Dark Windows 11 WPF settings & tray controller
 ├── TouchBar/                 # Elevated silent application launcher
-├── Install_Driver.bat        # 1-click driver & certificate installer (Admin)
-├── Add_to_Startup.bat        # Configures Task Scheduler autostart on logon
-├── Remove_from_Startup.bat   # Unregisters Task Scheduler autostart
-├── Start_TouchBar.bat        # Launches the Touch Bar host
-├── Restart_TouchBar.bat      # Restarts services and Touch Bar host
-├── TouchBar_Settings.bat     # Launches the TouchBarSettings GUI
+├── TouchBar.exe              # Unified entry point (System Tray + Settings + Display Host)
+├── TouchBar.bat              # Smart 1-click diagnostic installer & manager (Admin)
 ├── DFRContentHost.sln        # Visual Studio solution file
 └── LICENSE.txt               # MIT License
 ```

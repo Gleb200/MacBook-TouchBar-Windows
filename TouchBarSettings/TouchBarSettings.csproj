@@ -11,4 +11,7 @@
     <Resource Include="app.ico" />
     <Resource Include="app.png" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="5.0.0" />
+  </ItemGroup>
 </Project>

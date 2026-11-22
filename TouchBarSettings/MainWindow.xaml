@@ -292,16 +292,18 @@
                            FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="28,2,0,0" />
             </StackPanel>
 
-            <!-- Right side: Language Selector + Status Pill -->
+            <!-- Right side: Language Selector + Status Pill + Hide to Tray -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Name="TxtLanguageLabel" Text="Язык:" FontSize="12" Foreground="{StaticResource SecondaryText}"
                            VerticalAlignment="Center" Margin="0,0,8,0" />
-                <ComboBox Name="CmbLanguage" Width="150" Margin="0,0,16,0" VerticalAlignment="Center"
+                <ComboBox Name="CmbLanguage" Width="140" Margin="0,0,12,0" VerticalAlignment="Center"
                           SelectionChanged="OnLanguageSelectionChanged">
                     <ComboBoxItem Name="CmbItemLangAuto" Content="Авто (Система)" Tag="Auto" />
                     <ComboBoxItem Name="CmbItemLangRu" Content="Русский" Tag="ru" />
                     <ComboBoxItem Name="CmbItemLangEn" Content="English" Tag="en" />
                 </ComboBox>
+
+                <Button Name="BtnHeaderTray" Content="📥 В трей" Margin="0,0,10,0" VerticalAlignment="Center" Padding="10,5" Click="OnHideToTrayClicked" />
 
                 <!-- Status Pill -->
                 <Border Background="#1D382B" BorderBrush="#2D6346" BorderThickness="1" CornerRadius="12" Padding="12,5" VerticalAlignment="Center">
@@ -425,8 +427,11 @@
                                     <TextBlock Name="TxtAutoStartDesc" Text="Запускать панель Touch Bar в Планировщике Windows с повышенными правами (без окна UAC, включая работу от аккумулятора)."
                                                FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="0,2,16,0" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" Name="ChkAutoStart" VerticalAlignment="Center"
-                                          Checked="OnAutoStartToggled" Unchecked="OnAutoStartToggled" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Name="BtnToggleAutoStartLarge" Content="🚀 Включить автозапуск" Margin="0,0,10,0" Padding="12,6" Click="OnBtnToggleAutoStartLargeClicked" />
+                                    <CheckBox Name="ChkAutoStart" VerticalAlignment="Center"
+                                              Checked="OnAutoStartToggled" Unchecked="OnAutoStartToggled" />
+                                </StackPanel>
                             </Grid>
                         </Border>
 
@@ -609,6 +614,8 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
@@ -616,8 +623,10 @@
                     <TextBlock Name="TxtSavedAutoNote" Text="Изменения сохраняются в config.json и применяются на лету" FontSize="12" Foreground="{StaticResource SecondaryText}" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <Button Grid.Column="1" Name="BtnResetDefaults" Content="Сбросить по умолчанию" Margin="0,0,8,0" Click="OnResetDefaultsClicked" />
-                <Button Grid.Column="2" Name="BtnApply" Style="{StaticResource AccentButton}" Content="Сохранить и применить" Click="OnApplyClicked" />
+                <Button Grid.Column="1" Name="BtnAutoStartQuick" Content="🚀 Автозапуск: Выкл" Margin="0,0,8,0" Click="OnBtnToggleAutoStartQuickClicked" />
+                <Button Grid.Column="2" Name="BtnHideToTray" Content="📥 Скрыть в трей" Margin="0,0,8,0" Click="OnHideToTrayClicked" />
+                <Button Grid.Column="3" Name="BtnResetDefaults" Content="Сбросить по умолчанию" Margin="0,0,8,0" Click="OnResetDefaultsClicked" />
+                <Button Grid.Column="4" Name="BtnApply" Style="{StaticResource AccentButton}" Content="Сохранить и применить" Click="OnApplyClicked" />
             </Grid>
         </Border>
 

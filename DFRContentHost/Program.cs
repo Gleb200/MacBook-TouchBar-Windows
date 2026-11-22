@@ -42,14 +42,12 @@ namespace DFRContentHost
                 try
                 {
                     ViewModels.TelemetryViewModel.Shutdown();
-                    Interop.TrayIconHelper.Stop();
                 }
                 catch { }
             };
 
-            // Initialize configuration manager, system tray icon and Touch ID detector
+            // Initialize configuration manager and Touch ID detector
             _ = Models.ConfigManager.Instance;
-            Interop.TrayIconHelper.Start();
             Interop.TouchIdDetector.Start();
 
             try

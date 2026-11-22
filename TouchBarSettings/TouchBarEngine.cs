@@ -1,0 +1,155 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Management;
+using System.Threading;
+
+namespace TouchBarSettings
+{
+    public static class TouchBarEngine
+    {
+        private static Process _dfrProcess;
+
+        public static bool IsHostRunning()
+        {
+            try
+            {
+                if (_dfrProcess != null && !_dfrProcess.HasExited)
+                {
+                    return true;
+                }
+            }
+            catch { }
+
+            try
+            {
+                int myPid = Process.GetCurrentProcess().Id;
+
+                // Check native DFRContentHost processes
+                var dfrProcs = Process.GetProcessesByName("DFRContentHost");
+                if (dfrProcs.Length > 0)
+                {
+                    _dfrProcess = dfrProcs[0];
+                    return true;
+                }
+
+                // Check dotnet processes with commandline containing DFRContentHost, excluding ourselves
+                using var searcher = new ManagementObjectSearcher(
+                    "SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'dotnet.exe'");
+                foreach (var obj in searcher.Get())
+                {
+                    int pid = Convert.ToInt32(obj["ProcessId"]);
+                    if (pid == myPid) continue;
+
+                    string cmd = obj["CommandLine"]?.ToString() ?? "";
+                    if (cmd.IndexOf("DFRContentHost", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        try
+                        {
+                            _dfrProcess = Process.GetProcessById(pid);
+                            return true;
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+
+            return false;
+        }
+
+        public static void StartHost()
+        {
+            if (IsHostRunning()) return;
+
+            try
+            {
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string rootDir = Directory.Exists(Path.Combine(baseDir, "dotnet"))
+                    ? baseDir
+                    : (Directory.GetParent(baseDir) != null ? Directory.GetParent(baseDir).FullName : baseDir);
+
+                string dotnetDir = Path.Combine(rootDir, "dotnet");
+                string dotnetPath = Path.Combine(dotnetDir, "dotnet.exe");
+                string appDll = Path.Combine(rootDir, "HostApp_v2", "DFRContentHost.dll");
+                string workDir = Path.Combine(rootDir, "HostApp_v2");
+
+                if (!File.Exists(appDll))
+                {
+                    return;
+                }
+
+                string fileName = File.Exists(dotnetPath) ? dotnetPath : "dotnet";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = "\"" + appDll + "\"",
+                    WorkingDirectory = workDir,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+
+                if (Directory.Exists(dotnetDir))
+                {
+                    psi.EnvironmentVariables["DOTNET_ROOT"] = dotnetDir;
+                    string curPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+                    if (!curPath.Contains(dotnetDir))
+                    {
+                        psi.EnvironmentVariables["PATH"] = dotnetDir + ";" + curPath;
+                    }
+                }
+
+                _dfrProcess = Process.Start(psi);
+            }
+            catch { }
+        }
+
+        public static void StopHost()
+        {
+            try
+            {
+                if (_dfrProcess != null && !_dfrProcess.HasExited)
+                {
+                    _dfrProcess.Kill();
+                    _dfrProcess.WaitForExit(1000);
+                }
+            }
+            catch { }
+
+            try
+            {
+                int myPid = Process.GetCurrentProcess().Id;
+                using var searcher = new ManagementObjectSearcher(
+                    "SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'dotnet.exe'");
+                foreach (var obj in searcher.Get())
+                {
+                    int pid = Convert.ToInt32(obj["ProcessId"]);
+                    if (pid == myPid) continue;
+
+                    string cmd = obj["CommandLine"]?.ToString() ?? "";
+                    if (cmd.IndexOf("DFRContentHost", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        try { Process.GetProcessById(pid)?.Kill(); } catch { }
+                    }
+                }
+
+                foreach (var p in Process.GetProcessesByName("DFRContentHost"))
+                {
+                    try { p.Kill(); } catch { }
+                }
+            }
+            catch { }
+
+            _dfrProcess = null;
+        }
+
+        public static void RestartHost()
+        {
+            StopHost();
+            Thread.Sleep(500);
+            StartHost();
+        }
+    }
+}

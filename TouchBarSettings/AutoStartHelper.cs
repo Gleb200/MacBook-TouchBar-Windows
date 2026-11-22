@@ -47,7 +47,7 @@ namespace TouchBarSettings
                     }
 
                     string psScript = $@"
-$action = New-ScheduledTaskAction -Execute '{exePath}' -WorkingDirectory '{rootDir}'
+$action = New-ScheduledTaskAction -Execute '{exePath}' -Argument '--tray' -WorkingDirectory '{rootDir}'
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 0)
