@@ -292,16 +292,98 @@
                            FontSize="12" Foreground="{StaticResource SecondaryText}" Margin="28,2,0,0" />
             </StackPanel>
 
-            <!-- Right side: Language Selector + Status Pill + Hide to Tray -->
+            <!-- Right side: Language Selector + Donate Dropdown + Hide to Tray + Status Pill -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Name="TxtLanguageLabel" Text="Язык:" FontSize="12" Foreground="{StaticResource SecondaryText}"
                            VerticalAlignment="Center" Margin="0,0,8,0" />
-                <ComboBox Name="CmbLanguage" Width="140" Margin="0,0,12,0" VerticalAlignment="Center"
+                <ComboBox Name="CmbLanguage" Width="130" Margin="0,0,10,0" VerticalAlignment="Center"
                           SelectionChanged="OnLanguageSelectionChanged">
                     <ComboBoxItem Name="CmbItemLangAuto" Content="Авто (Система)" Tag="Auto" />
                     <ComboBoxItem Name="CmbItemLangRu" Content="Русский" Tag="ru" />
                     <ComboBoxItem Name="CmbItemLangEn" Content="English" Tag="en" />
                 </ComboBox>
+
+                <!-- Donate / Support Dropdown Button -->
+                <Grid Margin="0,0,10,0" VerticalAlignment="Center">
+                    <Button Name="BtnDonate" Padding="12,5"
+                            ToolTip="Support independent open-source development (Boosty or Crypto)"
+                            Click="OnDonateBtnClicked">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Donate" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Path Data="M 0 0 L 3.5 3.5 L 7 0" Stroke="#A0A0A0" StrokeThickness="1.5" Margin="6,2,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Popup Name="DonatePopup" PlacementTarget="{Binding ElementName=BtnDonate}"
+                           Placement="Bottom" AllowsTransparency="True" StaysOpen="False" PopupAnimation="Fade">
+                        <Border Background="#252525" BorderBrush="#3D3D3D" BorderThickness="1"
+                                CornerRadius="8" Padding="6,6" Margin="0,4,0,0" Width="330">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" Direction="270" ShadowDepth="4" Opacity="0.4" />
+                            </Border.Effect>
+                            <StackPanel>
+                                <!-- Option 1: Boosty -->
+                                <Border x:Name="BorderBoosty" CornerRadius="6" Padding="10,8" Margin="0,0,0,4"
+                                        Cursor="Hand" MouseLeftButtonUp="OnDonateBoostyClicked">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#333333" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="Boosty (Card / Global)" FontWeight="SemiBold" FontSize="12.5" Foreground="#FFFFFF" />
+                                            <TextBlock Text="Bank card, Mir, PayPal, Global" FontSize="11" Foreground="{StaticResource SecondaryText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Name="BtnCopyBoosty" Content="Copy" Padding="8,3" FontSize="11"
+                                                VerticalAlignment="Center" ToolTip="Copy Boosty donate link"
+                                                Click="OnCopyBoostyClicked" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- Divider -->
+                                <Rectangle Height="1" Fill="#383838" Margin="4,2,4,6" />
+
+                                <!-- Option 2: NOWPayments -->
+                                <Border x:Name="BorderNowPayments" CornerRadius="6" Padding="10,8"
+                                        Cursor="Hand" MouseLeftButtonUp="OnDonateNowPaymentsClicked">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#333333" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="NOWPayments (Crypto: USDT / TON / BTC)" FontWeight="SemiBold" FontSize="12.5" Foreground="#FFFFFF" />
+                                            <TextBlock Text="USDT, TON, BTC, ETH and 300+ crypto" FontSize="11" Foreground="{StaticResource SecondaryText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Name="BtnCopyNowPayments" Content="Copy" Padding="8,3" FontSize="11"
+                                                VerticalAlignment="Center" ToolTip="Copy NOWPayments donate link"
+                                                Click="OnCopyNowPaymentsClicked" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
 
                 <Button Name="BtnHeaderTray" Content="📥 В трей" Margin="0,0,10,0" VerticalAlignment="Center" Padding="10,5" Click="OnHideToTrayClicked" />
 

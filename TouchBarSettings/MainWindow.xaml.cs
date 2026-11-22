@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TouchBarSettings.Models;
 
 namespace TouchBarSettings
@@ -620,6 +621,11 @@ namespace TouchBarSettings
                 var itemRestart = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayRestart", lang), null, (s, e) => RestartTouchBar());
                 _trayMenu.Items.Add(itemRestart);
 
+                var itemDonate = new System.Windows.Forms.ToolStripMenuItem("Donate / Support...");
+                itemDonate.DropDownItems.Add("Boosty (Card / Global)", null, (s, e) => OpenUrl("https://boosty.to/gringleb/donate"));
+                itemDonate.DropDownItems.Add("NOWPayments (Crypto: USDT / TON / BTC)", null, (s, e) => OpenUrl("https://nowpayments.io/donation/glebgrin"));
+                _trayMenu.Items.Add(itemDonate);
+
                 _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
 
                 var itemExit = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayExit", lang), null, (s, e) =>
@@ -740,6 +746,72 @@ namespace TouchBarSettings
                 BtnToggleAutoStartLarge.Content = enabled
                     ? I18n.Get("BtnAutoStartDisable", lang)
                     : I18n.Get("BtnAutoStartEnable", lang);
+            }
+        }
+
+        #endregion
+
+        #region Donate / Support Developer
+
+        private void OnDonateBtnClicked(object sender, RoutedEventArgs e)
+        {
+            if (DonatePopup != null)
+            {
+                DonatePopup.IsOpen = !DonatePopup.IsOpen;
+                if (DonatePopup.IsOpen)
+                {
+                    if (BtnCopyBoosty != null) BtnCopyBoosty.Content = "Copy";
+                    if (BtnCopyNowPayments != null) BtnCopyNowPayments.Content = "Copy";
+                }
+            }
+        }
+
+        private void OnDonateBoostyClicked(object sender, MouseButtonEventArgs e)
+        {
+            if (DonatePopup != null) DonatePopup.IsOpen = false;
+            OpenUrl("https://boosty.to/gringleb/donate");
+        }
+
+        private void OnDonateNowPaymentsClicked(object sender, MouseButtonEventArgs e)
+        {
+            if (DonatePopup != null) DonatePopup.IsOpen = false;
+            OpenUrl("https://nowpayments.io/donation/glebgrin");
+        }
+
+        private void OnCopyBoostyClicked(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            try
+            {
+                Clipboard.SetText("https://boosty.to/gringleb/donate");
+                if (BtnCopyBoosty != null) BtnCopyBoosty.Content = "Copied!";
+            }
+            catch { }
+        }
+
+        private void OnCopyNowPaymentsClicked(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            try
+            {
+                Clipboard.SetText("https://nowpayments.io/donation/glebgrin");
+                if (BtnCopyNowPayments != null) BtnCopyNowPayments.Content = "Copied!";
+            }
+            catch { }
+        }
+
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url)
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to open URL {url}: {ex.Message}");
             }
         }
 

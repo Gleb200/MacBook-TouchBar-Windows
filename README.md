@@ -5,6 +5,7 @@
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-informational.svg" alt="Platform: Windows 10 | 11 (x64)" />
   <img src="https://img.shields.io/badge/.NET-Core%203.0%20%2F%203.1-purple.svg" alt=".NET Core 3.0 / 3.1" />
+  <a href="https://boosty.to/gringleb/donate"><img src="https://img.shields.io/badge/Donate-Support-orange.svg" alt="Donate" /></a>
 </p>
 
 **A feature-rich, high-performance Touch Bar host and Control Center for Apple MacBook Pro running Windows 10/11 through Boot Camp.**
@@ -293,6 +294,19 @@ Build outputs will be generated in:
 > **Recommended Companion:** For complete hardware control of your MacBook Pro (2016–2020) running Windows in Boot Camp, use this project paired with **[WMF-Control-T2-Edition](https://github.com/Gleb200/WMF-Control-T2-Edition)**.
 >
 > While **Touch Bar for Windows** gives you tactile controls, media playback, and app switching, **WMF Control T2 Edition** manages dual fan curves, monitors Apple T2 temperature sensors, and streams real-time CPU thermal data directly to the Touch Bar widget via high-speed Shared Memory (`Local\WMF_CpuTemp`) with zero CPU overhead.
+
+---
+
+## Support the Project
+
+If you find **Touch Bar for Windows** helpful and want to support continued development and maintenance of independent open-source projects for MacBook Boot Camp:
+
+* **Boosty (Bank Card / Mir / PayPal / Global):** [boosty.to/gringleb/donate](https://boosty.to/gringleb/donate)
+* **NOWPayments (Crypto: USDT / TON / BTC / ETH / SOL and 300+ coins):** [nowpayments.io/donation/glebgrin](https://nowpayments.io/donation/glebgrin)
+
+<p align="left">
+  <a href="https://nowpayments.io/donation?api_key=88010831-497e-4981-af20-69e6dc850a90" target="_blank" rel="noreferrer noopener"><img src="https://nowpayments.io/images/embeds/donation-button-black.svg" alt="Crypto donation button by NOWPayments"></a>
+</p>
 
 ---
 
