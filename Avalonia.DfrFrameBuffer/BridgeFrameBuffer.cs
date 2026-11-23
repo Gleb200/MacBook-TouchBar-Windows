@@ -18,64 +18,48 @@ namespace Avalonia.DfrFrameBuffer
             _dpi = dpi ?? new Vector(192, 192);
 
             string instancePath = null;
-            for (int retry = 0; retry < 15; retry++)
+            for (int retry = 0; retry < 25; retry++)
             {
                 instancePath = Locator.FindDfrDevice();
-                if (instancePath != null) break;
-                System.Threading.Thread.Sleep(500);
-            }
-
-            if (instancePath == null)
-            {
-                // Attempt self-healing: start the DFRDisplayKm service and re-query
-                try
+                if (instancePath != null)
                 {
-                    var psi = new System.Diagnostics.ProcessStartInfo("sc.exe", "start DFRDisplayKm")
+                    _fd = NativeMethods.CreateFile(
+                        instancePath, FileAccess.Write, FileShare.ReadWrite,
+                        IntPtr.Zero, FileMode.Open, FileOptions.None,
+                        IntPtr.Zero
+                    );
+                    if (_fd != IntPtr.Zero && _fd.ToInt64() != -1) break;
+
+                    _fd = NativeMethods.CreateFile(
+                        instancePath, FileAccess.Write, FileShare.None,
+                        IntPtr.Zero, FileMode.Open, FileOptions.None,
+                        IntPtr.Zero
+                    );
+                    if (_fd != IntPtr.Zero && _fd.ToInt64() != -1) break;
+                }
+
+                if (retry == 2 || retry == 8)
+                {
+                    // Start or wake DFRDisplayKm service if not running
+                    try
                     {
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
-                    using var p = System.Diagnostics.Process.Start(psi);
-                    p?.WaitForExit(1000);
+                        var psi = new System.Diagnostics.ProcessStartInfo("sc.exe", "start DFRDisplayKm")
+                        {
+                            CreateNoWindow = true,
+                            UseShellExecute = false
+                        };
+                        using var p = System.Diagnostics.Process.Start(psi);
+                        p?.WaitForExit(1000);
+                    }
+                    catch { }
                 }
-                catch { }
-
-                for (int retry = 0; retry < 6; retry++)
-                {
-                    System.Threading.Thread.Sleep(500);
-                    instancePath = Locator.FindDfrDevice();
-                    if (instancePath != null) break;
-                }
-            }
-
-            if (instancePath == null)
-            {
-                throw new Exception("DFR Display Device not found");
-            }
-
-            for (int retry = 0; retry < 10; retry++)
-            {
-                _fd = NativeMethods.CreateFile(
-                    instancePath, FileAccess.Write, FileShare.ReadWrite,
-                    IntPtr.Zero, FileMode.Open, FileOptions.None,
-                    IntPtr.Zero
-                );
-                if (_fd != IntPtr.Zero && _fd.ToInt64() != -1) break;
-
-                // Also attempt with FileShare.None
-                _fd = NativeMethods.CreateFile(
-                    instancePath, FileAccess.Write, FileShare.None,
-                    IntPtr.Zero, FileMode.Open, FileOptions.None,
-                    IntPtr.Zero
-                );
-                if (_fd != IntPtr.Zero && _fd.ToInt64() != -1) break;
 
                 System.Threading.Thread.Sleep(500);
             }
 
             if (_fd == IntPtr.Zero || _fd.ToInt64() == -1)
             {
-                throw new Exception("Error: " + Marshal.GetLastWin32Error());
+                throw new Exception("DFR Display Device not ready: " + Marshal.GetLastWin32Error());
             }
 
             DfrDisplayPipeline.Initialize(_fd);

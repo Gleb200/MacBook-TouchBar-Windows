@@ -366,14 +366,24 @@ function Invoke-ToggleAutoStart {
 
     if ($newState) {
         $exePath = Join-Path $RootDir "TouchBar.exe"
-        $action = New-ScheduledTaskAction -Execute $exePath -WorkingDirectory $RootDir
+        $action = New-ScheduledTaskAction -Execute $exePath -Argument "--tray" -WorkingDirectory $RootDir
         $trigger = New-ScheduledTaskTrigger -AtLogOn
+        $trigger.Delay = 'PT4S'
         $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
-        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 0)
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 0) -Priority 4
         Register-ScheduledTask -TaskName "TouchBarAutoStart" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-        Write-Host "[✓] Задача 'TouchBarAutoStart' зарегистрирована в Планировщике Windows!" -ForegroundColor Green
+        
+        # User Registry Run key as backup
+        try {
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "TouchBar" -Value "`"$exePath`" --tray" -Force
+        } catch {}
+
+        Write-Host "[✓] Автозапуск включен (запуск в трей с задержкой 4 сек)!" -ForegroundColor Green
     } else {
-        schtasks.exe /delete /tn "TouchBarAutoStart" /f | Out-Null
+        schtasks.exe /delete /tn "TouchBarAutoStart" /f > $null 2>&1
+        try {
+            Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "TouchBar" -ErrorAction SilentlyContinue
+        } catch {}
         Write-Host "[✓] Автозапуск успешно удален!" -ForegroundColor Green
     }
 }

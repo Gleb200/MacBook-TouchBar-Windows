@@ -21,6 +21,39 @@ namespace TouchBarSettings
         private bool _hasShownBalloon = false;
         public ObservableCollection<WidgetConfigItem> WidgetsList { get; } = new ObservableCollection<WidgetConfigItem>();
 
+        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern int RegisterWindowMessage(string lpString);
+
+        private static readonly int WM_SHOWSETTINGS = RegisterWindowMessage("TouchBar_ShowSettings");
+        private static readonly int WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            var helper = new System.Windows.Interop.WindowInteropHelper(this);
+            var source = System.Windows.Interop.HwndSource.FromHwnd(helper.Handle);
+            source?.AddHook(WndProc);
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            try
+            {
+                if (msg == WM_SHOWSETTINGS)
+                {
+                    Dispatcher.InvokeAsync(() => ShowAndRestoreWindow());
+                    handled = true;
+                }
+                else if (msg == WM_TASKBARCREATED)
+                {
+                    Dispatcher.InvokeAsync(() => SetupSystemTray());
+                    handled = true;
+                }
+            }
+            catch { }
+            return IntPtr.Zero;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -36,6 +69,27 @@ namespace TouchBarSettings
 
             // Start Touch Bar hardware display host immediately
             TouchBarEngine.StartHost();
+
+            TouchBarEngine.OnHostStatusChanged += (running) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    string l = _config?.GetEffectiveLanguage() ?? "ru";
+                    if (TxtServiceActive != null)
+                    {
+                        if (running)
+                        {
+                            TxtServiceActive.Text = I18n.Get("ServiceActive", l);
+                            TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 209, 88));
+                        }
+                        else
+                        {
+                            TxtServiceActive.Text = l == "ru" ? "Подключение к Touch Bar..." : "Connecting to Touch Bar...";
+                            TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 214, 10));
+                        }
+                    }
+                });
+            };
 
             // If launched with --tray or -minimized or --autostart, start directly in tray
             string[] args = Environment.GetCommandLineArgs();
@@ -631,6 +685,7 @@ namespace TouchBarSettings
                 var itemExit = new System.Windows.Forms.ToolStripMenuItem(I18n.Get("TrayExit", lang), null, (s, e) =>
                 {
                     _isRealExit = true;
+                    TouchBarEngine.Shutdown();
                     Close();
                 });
                 _trayMenu.Items.Add(itemExit);
@@ -640,13 +695,17 @@ namespace TouchBarSettings
 
         public void ShowAndRestoreWindow()
         {
-            Show();
-            if (WindowState == WindowState.Minimized)
+            try
             {
-                WindowState = WindowState.Normal;
+                Show();
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+                Activate();
+                Focus();
             }
-            Activate();
-            Focus();
+            catch { }
         }
 
         private void RestartTouchBar()
@@ -680,7 +739,7 @@ namespace TouchBarSettings
 
             try
             {
-                TouchBarEngine.StopHost();
+                TouchBarEngine.Shutdown();
                 if (_notifyIcon != null)
                 {
                     _notifyIcon.Visible = false;

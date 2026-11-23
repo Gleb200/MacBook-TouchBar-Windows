@@ -12,34 +12,11 @@ namespace Avalonia.DfrFrameBuffer.Device
 
         public static string FindDfrDevice()
         {
-            // 1. Попытка поиска через SetupAPI с DIGCF_PRESENT
+            // 1. Поиск только реально активного (подключенного) устройства через SetupAPI с флагом DIGCF_PRESENT
             string path = EnumerateDeviceInterface(SetupAPI.DIGCF_PRESENT | SetupAPI.DIGCF_DEVICEINTERFACE);
             if (!string.IsNullOrEmpty(path)) return path;
 
-            // 2. Попытка поиска через SetupAPI без DIGCF_PRESENT
-            path = EnumerateDeviceInterface(SetupAPI.DIGCF_DEVICEINTERFACE);
-            if (!string.IsNullOrEmpty(path)) return path;
-
-            // 3. Fallback: поиск пути символической ссылки напрямую в реестре
-            try
-            {
-                using (var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\DeviceClasses\{2003cacd-9e7c-477c-ab06-a5a8bbb1a63e}"))
-                {
-                    if (key != null)
-                    {
-                        var subKeyNames = key.GetSubKeyNames();
-                        foreach (var subName in subKeyNames)
-                        {
-                            if (subName.StartsWith("##?#", StringComparison.OrdinalIgnoreCase))
-                            {
-                                return @"\\?\" + subName.Substring(4);
-                            }
-                        }
-                    }
-                }
-            }
-            catch { }
-
+            // Если устройство не найдено как активное, возвращаем null (чтобы вызывающая сторона знала о необходимости подождать или запустить службу)
             return null;
         }
 

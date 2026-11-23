@@ -19,26 +19,25 @@ namespace Avalonia.DfrFrameBuffer
 
         public FnKeyNotifier(Dispatcher dispatcher)
         {
-            var instancePath = Locator.FindDfrDevice();
-            if (instancePath == null)
-            {
-                throw new Exception("DFR Display Device not found");
-            }
-
             _dispatcher = dispatcher;
-
-            _fd = NativeMethods.CreateFile(
-                instancePath, FileAccess.ReadWrite, FileShare.None,
-                IntPtr.Zero, FileMode.Open, FileOptions.None,
-                IntPtr.Zero
-            );
-
-            if (_fd == IntPtr.Zero)
+            try
             {
-                throw new Exception("Error: " + Marshal.GetLastWin32Error());
-            }
+                var instancePath = Locator.FindDfrDevice();
+                if (instancePath != null)
+                {
+                    _fd = NativeMethods.CreateFile(
+                        instancePath, FileAccess.ReadWrite, FileShare.ReadWrite,
+                        IntPtr.Zero, FileMode.Open, FileOptions.None,
+                        IntPtr.Zero
+                    );
 
-            ThreadPool.UnsafeQueueUserWorkItem(_ => PollNextFnStatus(), null);
+                    if (_fd != IntPtr.Zero && _fd.ToInt64() != -1)
+                    {
+                        ThreadPool.UnsafeQueueUserWorkItem(_ => PollNextFnStatus(), null);
+                    }
+                }
+            }
+            catch { }
         }
 
         public void PollNextFnStatus()
