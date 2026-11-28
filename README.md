@@ -1,7 +1,7 @@
 ﻿# Touch Bar for Windows (MacBook Pro Edition)
 
 <p align="center">
-  <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.1-blue.svg" alt="Release" /></a>
+  <a href="https://github.com/Gleb200/MacBook-TouchBar-Windows/releases"><img src="https://img.shields.io/badge/release-v1.0.2-blue.svg" alt="Release" /></a>
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-informational.svg" alt="Platform: Windows 10 | 11 (x64)" />
   <img src="https://img.shields.io/badge/.NET-Core%203.0%20%2F%203.1-purple.svg" alt=".NET Core 3.0 / 3.1" />
@@ -13,6 +13,17 @@
 Renders custom UI directly to the Touch Bar hardware framebuffer at smooth 60 FPS with zero lag, bringing native media control, intelligent audio device tracking, an adaptive running apps switcher dock with touch gestures, interactive pets, multi-source CPU thermals, and MacBook hardware integrations.
 
 Supports all Touch Bar MacBook Pro models (13", 15", 16" from 2016 through 2020 with Apple T1 and T2 Security Chips).
+
+---
+
+## What's new in v1.0.2
+
+* **Fixed: Touch Bar stayed black after a reboot until "Restart Touch Bar" was clicked.** The supervisor now verifies that the display host actually reached the hardware (heartbeat after the first frame) and performs an automatic clean restart if it did not. The framebuffer handle is also reopened automatically after sleep/resume or a slow USB enumeration.
+* **Configurable startup delay in the GUI.** `Control Center → Display & System → Autostart` now has a "Startup delay at logon" selector (0–60 s, default 15 s). The hard-coded 4-second Task Scheduler delay was removed; the delay is applied by the app itself and can be changed live.
+* **No more duplicate logon entries.** The installer previously registered both a scheduled task and an HKCU `Run` entry; the non-elevated one could win the single-instance mutex before the elevated task started. Only the Task Scheduler entry is used now (HKCU is a fallback if task registration fails).
+* **Fixed driver installer error `Copy-Item: DFRDisplayKm.sys is being used by another process`.** The installer now stops the `DFRDisplayKm` kernel service before replacing the file, retries the copy, and if Windows still keeps the file locked, schedules the replacement for the next reboot instead of silently ignoring the error.
+* **Better manual driver installation.** The installer now prints step-by-step "Have Disk" instructions and explains that the INF must be applied to the **parent** `iBridge Display Composition Device` (VID_05AC&PID_8302/8600), not to the `&MI_01` child.
+* **Clearer diagnostics.** `TouchBar.bat status` now also reports the DriverStore package, the iBridge parent device, and the difference between "device not found" and "driver not configured".
 
 ---
 
@@ -141,6 +152,8 @@ An automatic multi-source thermal engine that gracefully falls back across senso
   * Closing (`[X]`) or minimizing the Settings window automatically docks to the tray, maintaining 60 FPS Touch Bar rendering in the background.
 * **In-App Autostart Management:**
   Toggle Windows logon autostart directly with one switch inside the Settings window (or from the tray menu) without needing separate scripts.
+* **Configurable Startup Delay & Self-Healing:**
+  A selector in the Settings window controls how many seconds after logon the display host starts (0–60 s, default 15 s). This gives Windows time to enumerate the Apple T2 iBridge. The supervisor also verifies that the host actually rendered a frame and performs an automatic clean restart if it did not — no more clicking "Restart Touch Bar" after every reboot.
 * **Fluent Windows 11 Settings Center:**
   * Modern dark-themed WPF configuration utility with instantaneous asynchronous loading.
   * Bilingual: full English and Russian localization.
@@ -154,12 +167,15 @@ An automatic multi-source thermal engine that gracefully falls back across senso
   Automatically identifies missing components or disabled devices and fixes them in one click.
 * **Quick CLI Commands:**
   - `TouchBar.bat` (Interactive status check & automatic setup)
-  - `TouchBar.bat install` (Installs certificates and registers driver)
+  - `TouchBar.bat install` (Full driver installation: certificate, DriverStore, service, safe `.sys` copy, device reset)
+  - `TouchBar.bat repair` (Alias of `install`)
   - `TouchBar.bat status` (Displays comprehensive diagnostic status)
-  - `TouchBar.bat fix` (Re-enumerates USB bus & restarts Touch Bar)
+  - `TouchBar.bat fix` (Same as `install`, then launches Touch Bar)
+  - `TouchBar.bat restart` (Restarts the Touch Bar processes)
   - `TouchBar.bat autostart` (Toggles Windows Task Scheduler autostart)
   - `TouchBar.bat uninstall` (Clean uninstallation of driver, certs, and tasks)
   - `TouchBar.bat start` (Launches `TouchBar.exe`)
+  - `TouchBar.bat settings` (Opens the Control Center window)
 
 ---
 
@@ -196,13 +212,14 @@ An automatic multi-source thermal engine that gracefully falls back across senso
 > **Driver & Certificate are bundled in the release:** The `DFRDisplayKm` driver, its security certificate, and diagnostic tools are all bundled in the release archive in the `Driver/` folder! You do **not** need to download them separately.
 
 1. **Download & Extract Release:**
-   * Download the latest **`TouchBar-Windows-v1.0.1-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
+   * Download the latest **`TouchBar-Windows-v1.0.2-win64.zip`** from **[Releases](https://github.com/Gleb200/MacBook-TouchBar-Windows/releases)**.
    * Extract the ZIP archive into a permanent folder (e.g. `C:\Program Files\TouchBar` or anywhere on your SSD).
 
 2. **Run Intelligent Setup (Automated 1-Click):**
-   * Right-click **`TouchBar.bat`** and select **Run as administrator**.
+   * Right-click **`TouchBar.bat`** and select **Run as administrator** (or run `TouchBar.bat install`).
    * The script will automatically verify your system environment, import `DFRDisplayKm.cer` into Windows **Trusted Root** and **Trusted Publishers** (preventing Code 52 errors), register `DFRDisplayKm.inf` into the Windows DriverStore, and switch the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) into Touch Bar Display mode.
-   * If any step is missing or broken, it will offer to fix it automatically!
+   * Before replacing `DFRDisplayKm.sys` the installer now stops the `DFRDisplayKm` kernel service, so the old *"file is being used by another process"* error no longer breaks the installation. If Windows still keeps the file locked, the replacement is scheduled for the next reboot automatically.
+   * If Test Mode was just enabled, **reboot Windows** when the installer asks. The driver cannot load before that reboot.
 
 3. **Launch Touch Bar:**
    * Double-click **`TouchBar.exe`** (or run `TouchBar.bat start`).
@@ -213,6 +230,7 @@ An automatic multi-source thermal engine that gracefully falls back across senso
    * Open the Settings window (double-click the tray icon or launch `TouchBar.exe`).
    * Switch the **🚀 Автозапуск при входе в систему (Autostart on logon)** toggle to **ON** (or right-click the tray icon $\rightarrow$ **🚀 Автозапуск: Вкл**).
    * This registers the silent Windows Task Scheduler task `TouchBarAutoStart` with highest privileges, launching silently in the system tray (`--tray`) on user login without UAC prompts.
+   * In the same card, set **Startup delay at logon** (0–60 s). The default is 15 s; increase it if the Touch Bar does not light up immediately after boot. The supervisor will also restart the display host automatically if it detects that no frame reached the hardware.
 
 ---
 
@@ -222,7 +240,25 @@ An automatic multi-source thermal engine that gracefully falls back across senso
   1. Right-click **`TouchBar.bat`** $\rightarrow$ **Run as administrator** (or run `TouchBar.bat fix`).
   2. The script diagnoses driver health and resets the Apple T2 iBridge USB controller (`USB\VID_05AC&PID_8302`) to re-bind the framebuffer interface.
   3. **Yellow exclamation mark (Code 52) in Device Manager:** Windows Test Mode is not enabled or the certificate was not imported. Make sure you ran `bcdedit -set TESTSIGNING ON`, rebooted, and ran `TouchBar.bat install` as Administrator.
-  4. Check `crash.txt` in the program folder for detailed diagnostic logs.
+  4. Check `crash.txt` and `supervisor.log` in the program folder for detailed diagnostic logs.
+
+* **Installer error: `Copy-Item: ... DFRDisplayKm.sys is being used by another process`:**
+  This happened in v1.0.1 because the installer copied the driver file while the kernel service was still loaded. v1.0.2 stops the `DFRDisplayKm` service first, retries the copy, and if Windows still keeps the file locked, schedules the replacement for the next reboot. Re-run **`TouchBar.bat install`** as Administrator and reboot when asked. If you are upgrading from an older version, a reboot before running the installer also clears the lock.
+
+* **`DFRDisplayKm` does not appear in the "Update driver" list / manual installation:**
+  1. Open **Device Manager** (`devmgmt.msc`) as Administrator.
+  2. Enable **View $\rightarrow$ Show hidden devices** and expand **Universal Serial Bus devices** (also check **Other devices**).
+  3. Find the **parent** device **`iBridge Display Composition Device`** (`USB\VID_05AC&PID_8302` or `PID_8600`). Do **not** select the child with `&MI_01`.
+  4. Right-click the parent $\rightarrow$ **Update driver** $\rightarrow$ **Browse my computer** $\rightarrow$ **Let me pick from a list** $\rightarrow$ **Have Disk...** $\rightarrow$ browse to `Driver\DFRDisplayKm.inf` $\rightarrow$ select **`iBridge Display Composition Device`**.
+  5. Reboot. The INF install on the parent device performs the required USB configuration switch; installing it only on the `&MI_01` child (or picking a generic `USB Composite Device`) leaves the Touch Bar dark.
+
+* **After manually assigning a driver the Touch Bar turned off and `TouchBar.bat` does nothing:**
+  1. In Device Manager, right-click the Touch Bar / `iBridge Display` device $\rightarrow$ **Uninstall device** and check **Delete the driver software for this device**.
+  2. Reboot Windows.
+  3. Run **`TouchBar.bat install`** as Administrator again and follow the reboot prompt. Do not install a generic driver manually.
+
+* **Touch Bar works only after clicking "Restart Touch Bar" in the tray after every reboot:**
+   Resolved in v1.0.2. The supervisor now waits for the configured startup delay, verifies that the first frame actually reached the hardware, and performs an automatic clean restart if it did not. You can tune the delay in **Settings $\rightarrow$ Display & System $\rightarrow$ Startup delay at logon**.
 
 * **Settings window takes long to open:**
   - Resolved: Settings queries system state asynchronously and opens instantly in milliseconds. Double-click the system tray icon to view or click **📥 Скрыть в трей** to minimize.

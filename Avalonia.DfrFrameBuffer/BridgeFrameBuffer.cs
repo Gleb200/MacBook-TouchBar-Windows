@@ -11,14 +11,25 @@ namespace Avalonia.DfrFrameBuffer
     public class BridgeFrameBuffer : IFramebufferPlatformSurface, IDisposable
     {
         private readonly Vector _dpi;
+        private readonly object _fdLock = new object();
         private IntPtr _fd;
 
         public BridgeFrameBuffer(Vector? dpi = null)
         {
             _dpi = dpi ?? new Vector(192, 192);
 
+            // On logon the Apple T2 iBridge may take a while to expose the DFR
+            // display interface. Allow up to ~20 seconds when the supervisor marks
+            // this launch as an autostart, otherwise keep the shorter 12.5s window.
+            int maxRetries = 25;
+            try
+            {
+                if (Environment.GetEnvironmentVariable("TOUCHBAR_SLOW_START") == "1") maxRetries = 45;
+            }
+            catch { }
+
             string instancePath = null;
-            for (int retry = 0; retry < 25; retry++)
+            for (int retry = 0; retry < maxRetries; retry++)
             {
                 instancePath = Locator.FindDfrDevice();
                 if (instancePath != null)
@@ -62,12 +73,63 @@ namespace Avalonia.DfrFrameBuffer
                 throw new Exception("DFR Display Device not ready: " + Marshal.GetLastWin32Error());
             }
 
+            // Let the pipeline reopen the device handle if it becomes stale after
+            // sleep/resume or a slow post-boot enumeration.
+            DfrDisplayPipeline.DeviceReopenCallback = ReopenDevice;
+
             DfrDisplayPipeline.Initialize(_fd);
         }
 
         public Vector Dpi => _dpi;
 
         public ILockedFramebuffer Lock() => new LockedFrameBuffer(_dpi);
+
+        /// <summary>
+        /// Reopens the DFR display device and returns the new handle.
+        /// Called from the pipeline worker thread when DeviceIoControl starts failing.
+        /// </summary>
+        private IntPtr ReopenDevice()
+        {
+            for (int retry = 0; retry < 4; retry++)
+            {
+                string instancePath = Locator.FindDfrDevice();
+                if (instancePath != null)
+                {
+                    IntPtr newHandle = NativeMethods.CreateFile(
+                        instancePath, FileAccess.Write, FileShare.ReadWrite,
+                        IntPtr.Zero, FileMode.Open, FileOptions.None,
+                        IntPtr.Zero
+                    );
+
+                    if (newHandle == IntPtr.Zero || newHandle.ToInt64() == -1)
+                    {
+                        newHandle = NativeMethods.CreateFile(
+                            instancePath, FileAccess.Write, FileShare.None,
+                            IntPtr.Zero, FileMode.Open, FileOptions.None,
+                            IntPtr.Zero
+                        );
+                    }
+
+                    if (newHandle != IntPtr.Zero && newHandle.ToInt64() != -1)
+                    {
+                        lock (_fdLock)
+                        {
+                            IntPtr oldHandle = _fd;
+                            _fd = newHandle;
+                            if (oldHandle != IntPtr.Zero && oldHandle.ToInt64() != -1)
+                            {
+                                NativeMethods.CloseHandle(oldHandle);
+                            }
+                        }
+                        return newHandle;
+                    }
+                }
+
+                System.Threading.Thread.Sleep(400);
+            }
+
+            return IntPtr.Zero;
+        }
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
@@ -81,8 +143,14 @@ namespace Avalonia.DfrFrameBuffer
                     // TODO: dispose managed state (managed objects).
                 }
 
+                DfrDisplayPipeline.DeviceReopenCallback = null;
                 DfrDisplayPipeline.Shutdown();
-                NativeMethods.CloseHandle(_fd);
+
+                lock (_fdLock)
+                {
+                    NativeMethods.CloseHandle(_fd);
+                    _fd = IntPtr.Zero;
+                }
 
                 disposedValue = true;
             }

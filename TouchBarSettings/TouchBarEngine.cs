@@ -6,6 +6,15 @@ using System.Threading;
 
 namespace TouchBarSettings
 {
+    /// <summary>
+    /// Supervises the Avalonia display host (DFRContentHost).
+    ///
+    /// Besides simply keeping the process alive, it verifies that the host actually
+    /// reached the Touch Bar hardware (a heartbeat file is written after the first
+    /// successful frame transmission). Without this check the process could stay
+    /// alive but render nothing after reboot, and the only workaround was the manual
+    /// "Restart Touch Bar" tray action. The watchdog now performs that restart itself.
+    /// </summary>
     public static class TouchBarEngine
     {
         private static Process _dfrProcess;
@@ -13,24 +22,97 @@ namespace TouchBarSettings
         private static bool _isShuttingDown = false;
         private static readonly object _lock = new object();
 
+        private static DateTime _hostStartedUtc = DateTime.MinValue;
+        private static DateTime _autoStartNotBeforeUtc = DateTime.MinValue;
+        private static DateTime _nextStartAttemptUtc = DateTime.MinValue;
+        private static int _failedStartAttempts = 0;
+
+        private static readonly TimeSpan HeartbeatTimeout = TimeSpan.FromSeconds(8);
+        private static readonly TimeSpan FirstFrameGrace = TimeSpan.FromSeconds(22);
+
         public static event Action<bool> OnHostStatusChanged;
+
+        public static string HeartbeatPath { get; } = BuildHeartbeatPath();
 
         static TouchBarEngine()
         {
-            _watchdogTimer = new Timer(WatchdogCallback, null, 3000, 3000);
+            _watchdogTimer = new Timer(WatchdogCallback, null, 2000, 3000);
+        }
+
+        private static string BuildHeartbeatPath()
+        {
+            try
+            {
+                string dir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (string.IsNullOrEmpty(dir))
+                {
+                    dir = Path.GetTempPath();
+                }
+                return Path.Combine(dir, "TouchBar", "host.heartbeat");
+            }
+            catch
+            {
+                return Path.Combine(Path.GetTempPath(), "TouchBar", "host.heartbeat");
+            }
+        }
+
+        /// <summary>
+        /// Defers the automatic host start after Windows logon by the configured
+        /// number of seconds. Called by the Settings window when launched with --tray.
+        /// </summary>
+        public static void SetStartupDelay(int seconds)
+        {
+            seconds = Math.Max(0, Math.Min(300, seconds));
+            if (seconds > 0)
+            {
+                _autoStartNotBeforeUtc = DateTime.UtcNow.AddSeconds(seconds);
+                Log($"Autostart delay set to {seconds}s (host will start at {_autoStartNotBeforeUtc:HH:mm:ss}).");
+            }
+            else
+            {
+                _autoStartNotBeforeUtc = DateTime.MinValue;
+                Log("Autostart delay disabled (host will start immediately).");
+            }
         }
 
         private static void WatchdogCallback(object state)
         {
             if (_isShuttingDown) return;
 
-            bool running = IsHostRunning();
-            OnHostStatusChanged?.Invoke(running);
-
-            if (!running && !_isShuttingDown)
+            try
             {
-                StartHost();
+                bool running = IsHostRunning();
+                bool ready = running && IsHeartbeatFresh();
+
+                try { OnHostStatusChanged?.Invoke(ready); } catch { }
+
+                if (!running)
+                {
+                    if (DateTime.UtcNow >= _autoStartNotBeforeUtc && DateTime.UtcNow >= _nextStartAttemptUtc)
+                    {
+                        StartHost();
+                    }
+                    return;
+                }
+
+                if (ready)
+                {
+                    _failedStartAttempts = 0;
+                    return;
+                }
+
+                // The process is alive but has not produced a single frame yet.
+                // After the grace period, do the same clean restart that used to be
+                // performed manually from the tray menu.
+                DateTime started = _hostStartedUtc;
+                if (started == DateTime.MinValue) started = DateTime.UtcNow;
+
+                if (DateTime.UtcNow - started > FirstFrameGrace)
+                {
+                    RestartHostInternal("host is alive but never sent a frame", true);
+                }
             }
+            catch { }
         }
 
         public static bool IsHostRunning()
@@ -52,6 +134,7 @@ namespace TouchBarSettings
                 if (dfrProcs.Length > 0)
                 {
                     _dfrProcess = dfrProcs[0];
+                    if (_hostStartedUtc == DateTime.MinValue) _hostStartedUtc = DateTime.UtcNow;
                     return true;
                 }
 
@@ -68,6 +151,7 @@ namespace TouchBarSettings
                         try
                         {
                             _dfrProcess = Process.GetProcessById(pid);
+                            if (_hostStartedUtc == DateTime.MinValue) _hostStartedUtc = DateTime.UtcNow;
                             return true;
                         }
                         catch { }
@@ -79,6 +163,29 @@ namespace TouchBarSettings
             return false;
         }
 
+        public static bool IsHeartbeatFresh()
+        {
+            try
+            {
+                if (!File.Exists(HeartbeatPath)) return false;
+                var age = DateTime.UtcNow - File.GetLastWriteTimeUtc(HeartbeatPath);
+                return age >= TimeSpan.Zero && age <= HeartbeatTimeout;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void DeleteHeartbeat()
+        {
+            try
+            {
+                if (File.Exists(HeartbeatPath)) File.Delete(HeartbeatPath);
+            }
+            catch { }
+        }
+
         public static void EnsureDriverServiceRunning()
         {
             try
@@ -86,10 +193,12 @@ namespace TouchBarSettings
                 var psi = new ProcessStartInfo("sc.exe", "start DFRDisplayKm")
                 {
                     CreateNoWindow = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                 };
                 using var p = Process.Start(psi);
-                p?.WaitForExit(1000);
+                p?.WaitForExit(1500);
             }
             catch { }
         }
@@ -102,6 +211,7 @@ namespace TouchBarSettings
                 if (IsHostRunning()) return;
 
                 EnsureDriverServiceRunning();
+                DeleteHeartbeat();
 
                 try
                 {
@@ -117,10 +227,22 @@ namespace TouchBarSettings
 
                     if (!File.Exists(appDll))
                     {
+                        Log("Cannot start host: HostApp_v2\\DFRContentHost.dll not found.");
                         return;
                     }
 
                     string fileName = File.Exists(dotnetPath) ? dotnetPath : "dotnet";
+
+                    // On logon the Apple T2 iBridge can take much longer to expose the
+                    // DFR interface than during a manual start. Tell the host to retry
+                    // device discovery for longer in that case.
+                    bool slowStart = _autoStartNotBeforeUtc != DateTime.MinValue;
+                    try
+                    {
+                        long uptimeMs = Environment.TickCount64;
+                        if (uptimeMs >= 0 && uptimeMs < 300000) slowStart = true;
+                    }
+                    catch { }
 
                     var psi = new ProcessStartInfo
                     {
@@ -131,6 +253,12 @@ namespace TouchBarSettings
                         CreateNoWindow = true,
                         UseShellExecute = false
                     };
+
+                    if (slowStart)
+                    {
+                        psi.EnvironmentVariables["TOUCHBAR_SLOW_START"] = "1";
+                        Log("Starting host with extended device-discovery window (post-boot/autostart).");
+                    }
 
                     if (Directory.Exists(dotnetDir))
                     {
@@ -143,8 +271,15 @@ namespace TouchBarSettings
                     }
 
                     _dfrProcess = Process.Start(psi);
+                    _hostStartedUtc = DateTime.UtcNow;
+                    Log($"Host started (pid {_dfrProcess?.Id}).");
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log("Failed to start host: " + ex.Message);
+                    _failedStartAttempts++;
+                    _nextStartAttemptUtc = DateTime.UtcNow.AddSeconds(Math.Min(30, 3 * _failedStartAttempts));
+                }
             }
         }
 
@@ -157,7 +292,7 @@ namespace TouchBarSettings
                     if (_dfrProcess != null && !_dfrProcess.HasExited)
                     {
                         _dfrProcess.Kill();
-                        _dfrProcess.WaitForExit(1000);
+                        _dfrProcess.WaitForExit(1500);
                     }
                 }
                 catch { }
@@ -187,6 +322,8 @@ namespace TouchBarSettings
                 catch { }
 
                 _dfrProcess = null;
+                _hostStartedUtc = DateTime.MinValue;
+                DeleteHeartbeat();
             }
         }
 
@@ -198,11 +335,46 @@ namespace TouchBarSettings
             StopHost();
         }
 
+        /// <summary>Manual restart (used by the tray menu and Settings window).</summary>
         public static void RestartHost()
         {
+            RestartHostInternal("manual restart requested", false);
+        }
+
+        private static void RestartHostInternal(string reason, bool backoff)
+        {
+            Log("Restarting host: " + reason);
+
             StopHost();
-            Thread.Sleep(500);
+            Thread.Sleep(700);
+
+            if (backoff)
+            {
+                _failedStartAttempts++;
+                _nextStartAttemptUtc = DateTime.UtcNow.AddSeconds(Math.Min(30, 3 * _failedStartAttempts));
+                // The watchdog will start the host again once the backoff expires.
+                return;
+            }
+
             StartHost();
+        }
+
+        private static void Log(string message)
+        {
+            try
+            {
+                string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "supervisor.log");
+                if (File.Exists(logPath))
+                {
+                    var fi = new FileInfo(logPath);
+                    if (fi.Length > 512 * 1024)
+                    {
+                        try { File.Delete(logPath); } catch { }
+                    }
+                }
+                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n");
+            }
+            catch { }
         }
     }
 }

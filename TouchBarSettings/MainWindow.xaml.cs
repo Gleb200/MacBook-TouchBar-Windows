@@ -67,40 +67,65 @@ namespace TouchBarSettings
             LoadConfigToUI();
             _isInitializing = false;
 
-            // Start Touch Bar hardware display host immediately
-            TouchBarEngine.StartHost();
+            bool isTrayMode = IsTrayLaunch();
+            int delay = Math.Max(0, Math.Min(300, _config?.AutoStartDelaySeconds ?? 0));
 
-            TouchBarEngine.OnHostStatusChanged += (running) =>
+            TouchBarEngine.OnHostStatusChanged += OnHostStatusChanged;
+
+            if (isTrayMode && delay > 0)
             {
-                Dispatcher.Invoke(() =>
+                // The logon autostart entry starts us immediately; wait a little so
+                // Windows has time to enumerate the Apple T2 iBridge / DFRDisplayKm
+                // device before the display host opens it.
+                TouchBarEngine.SetStartupDelay(delay);
+                if (TxtServiceActive != null)
                 {
                     string l = _config?.GetEffectiveLanguage() ?? "ru";
-                    if (TxtServiceActive != null)
-                    {
-                        if (running)
-                        {
-                            TxtServiceActive.Text = I18n.Get("ServiceActive", l);
-                            TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 209, 88));
-                        }
-                        else
-                        {
-                            TxtServiceActive.Text = l == "ru" ? "Подключение к Touch Bar..." : "Connecting to Touch Bar...";
-                            TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 214, 10));
-                        }
-                    }
-                });
-            };
+                    TxtServiceActive.Text = string.Format(I18n.Get("ServiceWaiting", l), delay);
+                    TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 214, 10));
+                }
+            }
+            else
+            {
+                TouchBarEngine.SetStartupDelay(0);
+                TouchBarEngine.StartHost();
+            }
 
             // If launched with --tray or -minimized or --autostart, start directly in tray
-            string[] args = Environment.GetCommandLineArgs();
-            if (args != null && args.Any(a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase) ||
-                                             string.Equals(a, "-tray", StringComparison.OrdinalIgnoreCase) ||
-                                             string.Equals(a, "/tray", StringComparison.OrdinalIgnoreCase) ||
-                                             string.Equals(a, "--autostart", StringComparison.OrdinalIgnoreCase) ||
-                                             string.Equals(a, "-minimized", StringComparison.OrdinalIgnoreCase)))
+            if (isTrayMode)
             {
                 Hide();
             }
+        }
+
+        private static bool IsTrayLaunch()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            return args != null && args.Any(a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(a, "-tray", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(a, "/tray", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(a, "--autostart", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(a, "-minimized", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void OnHostStatusChanged(bool ready)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                string l = _config?.GetEffectiveLanguage() ?? "ru";
+                if (TxtServiceActive == null) return;
+
+                if (ready)
+                {
+                    TxtServiceActive.Text = I18n.Get("ServiceActive", l);
+                    TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(48, 209, 88));
+                }
+                else
+                {
+                    TxtServiceActive.Text = I18n.Get("ServiceConnecting", l);
+                    TxtServiceActive.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 214, 10));
+                }
+            });
         }
 
         private void LoadConfigToUI()
@@ -157,6 +182,21 @@ namespace TouchBarSettings
             }
 
             ChkShowFnKeys.IsChecked = _config.ShowFnKeysOnFnPress;
+
+            // Autostart start delay (seconds)
+            string delayStr = Math.Max(0, Math.Min(300, _config.AutoStartDelaySeconds)).ToString();
+            foreach (ComboBoxItem item in CmbAutoStartDelay.Items)
+            {
+                if (item.Tag?.ToString() == delayStr)
+                {
+                    CmbAutoStartDelay.SelectedItem = item;
+                    break;
+                }
+            }
+            if (CmbAutoStartDelay.SelectedItem == null && CmbAutoStartDelay.Items.Count > 0)
+            {
+                CmbAutoStartDelay.SelectedIndex = 0;
+            }
 
             // AutoStart (queried in background to ensure instant zero-latency UI display)
             System.Threading.Tasks.Task.Run(() =>
@@ -251,6 +291,15 @@ namespace TouchBarSettings
             TxtFnKeysDesc.Text = I18n.Get("FnKeysDesc", lang);
             TxtAutoStartTitle.Text = I18n.Get("AutoStartTitle", lang);
             TxtAutoStartDesc.Text = I18n.Get("AutoStartDesc", lang);
+            TxtAutoStartDelayTitle.Text = I18n.Get("AutoStartDelayTitle", lang);
+            TxtAutoStartDelayDesc.Text = I18n.Get("AutoStartDelayDesc", lang);
+            CmbItemDelay0.Content = I18n.Get("DelayImmediate", lang);
+            CmbItemDelay5.Content = I18n.Get("DelaySeconds5", lang);
+            CmbItemDelay10.Content = I18n.Get("DelaySeconds10", lang);
+            CmbItemDelay15.Content = I18n.Get("DelaySeconds15", lang);
+            CmbItemDelay20.Content = I18n.Get("DelaySeconds20", lang);
+            CmbItemDelay30.Content = I18n.Get("DelaySeconds30", lang);
+            CmbItemDelay60.Content = I18n.Get("DelaySeconds60", lang);
 
             // Tab 2: Pets
             TabPets.Header = I18n.Get("TabPets", lang);
@@ -424,6 +473,17 @@ namespace TouchBarSettings
             }
         }
 
+        private void OnAutoStartDelayChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing || _config == null) return;
+            if (CmbAutoStartDelay.SelectedItem is ComboBoxItem item &&
+                int.TryParse(item.Tag?.ToString(), out int delay))
+            {
+                _config.AutoStartDelaySeconds = Math.Max(0, Math.Min(300, delay));
+                SaveConfigFromUI();
+            }
+        }
+
         private void OnWidgetMoveUpClicked(object sender, RoutedEventArgs e)
         {
             int index = LstWidgets.SelectedIndex;
@@ -588,6 +648,12 @@ namespace TouchBarSettings
 
                 _config.ShowFnKeysOnFnPress = ChkShowFnKeys.IsChecked == true;
                 _config.AutoStartWithWindows = ChkAutoStart.IsChecked == true;
+
+                if (CmbAutoStartDelay.SelectedItem is ComboBoxItem delayItem &&
+                    int.TryParse(delayItem.Tag?.ToString(), out int startDelay))
+                {
+                    _config.AutoStartDelaySeconds = Math.Max(0, Math.Min(300, startDelay));
+                }
 
                 _config.PetEnabled = ChkPetEnabled.IsChecked == true;
                 _config.PetSpeed = Math.Round(SliderPetSpeed.Value, 2);
